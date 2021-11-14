@@ -41,7 +41,7 @@ public extension Dictionary {
 //}
 
 
-open class NetworkClient : NSObject {
+public class NetworkClient : NSObject {
     var logLevel: Level
 //    open class var shared: NetworkClient { get }
     
