@@ -16,8 +16,8 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "AD1553562740B4FA00F2A17A"
                BuildableName = "network.framework"
-               BlueprintName = "network"
-               ReferencedContainer = "container:network.xcodeproj">
+               BlueprintName = "CoreNetwork"
+               ReferencedContainer = "container:CoreNetwork.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -35,8 +35,8 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "AD1553602740B4FA00F2A17A"
                BuildableName = "networkTests.xctest"
-               BlueprintName = "networkTests"
-               ReferencedContainer = "container:network.xcodeproj">
+               BlueprintName = "CoreNetworkTests"
+               ReferencedContainer = "container:CoreNetwork.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -63,8 +63,8 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "AD1553562740B4FA00F2A17A"
             BuildableName = "network.framework"
-            BlueprintName = "network"
-            ReferencedContainer = "container:network.xcodeproj">
+            BlueprintName = "CoreNetwork"
+            ReferencedContainer = "container:CoreNetwork.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>

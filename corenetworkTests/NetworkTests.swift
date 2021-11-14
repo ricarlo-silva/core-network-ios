@@ -6,9 +6,9 @@
 //
 
 import XCTest
-@testable import network
+@testable import CoreNetwork
 
-class networkTests: XCTestCase {
+class NetworkTests: XCTestCase {
     
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -43,7 +43,7 @@ class networkTests: XCTestCase {
         case .success:
             XCTFail("llk")
         case .failure(let error):
-            XCTAssertTrue(error.localizedDescription == "")
+            XCTAssertTrue(error is DecodingError)
         }
     }
     

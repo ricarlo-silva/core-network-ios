@@ -1,6 +1,6 @@
 //
 //  NetworkClient.swift
-//  network
+//  corenetwork
 //
 //  Created by Ricarlo Silva on 14/11/21.
 //
@@ -11,11 +11,11 @@ import Foundation
 extension Data {
     
     func toJSON() -> String? {
-        if let theJSONData = try? JSONSerialization.jsonObject(with: self, options: []) as? NSDictionary {
+        if let jsonData = try? JSONSerialization.jsonObject(with: self, options: []) as? NSDictionary {
             var swiftDict: [String: Any] = [:]
-            for key in theJSONData.allKeys {
+            for key in jsonData.allKeys {
                 let stringKey = key as? String
-                if let key = stringKey, let keyValue = theJSONData.value(forKey: key) {
+                if let key = stringKey, let keyValue = jsonData.value(forKey: key) {
                     swiftDict[key] = keyValue
                 }
             }
@@ -28,9 +28,9 @@ extension Data {
 public extension Dictionary {
     
     func toJSON() -> String? {
-        if let theJSONData = try? JSONSerialization.data(withJSONObject: self, options: .prettyPrinted),
-           let theJSONText = String(data: theJSONData, encoding: String.Encoding.ascii) {
-            return theJSONText
+        if let jsonData = try? JSONSerialization.data(withJSONObject: self, options: .prettyPrinted),
+           let jsonText = String(data: jsonData, encoding: String.Encoding.ascii) {
+            return jsonText
         }
         return nil
     }
@@ -49,13 +49,13 @@ public class NetworkClient : NSObject {
 
     private override init() {
 //        // 1
-//        guard let filePath = Bundle.main.path(forResource: "Network", ofType: "plist") else {
-//            fatalError("Couldn't find file 'Network.plist'.")
+//        guard let filePath = Bundle.main.path(forResource: "CoreNetwork", ofType: "plist") else {
+//            fatalError("Couldn't find file 'CoreNetwork.plist'.")
 //        }
 //        // 2
 //        let plist = NSDictionary(contentsOfFile: filePath)
 //        guard let value = plist?.object(forKey: "LOG_LEVEL") as? String else {
-//            fatalError("Couldn't find key 'LOG_LEVEL' in 'Network.plist'.")
+//            fatalError("Couldn't find key 'LOG_LEVEL' in 'CoreNetwork.plist'.")
 //        }
         
         logLevel = Level.valueOf("body")

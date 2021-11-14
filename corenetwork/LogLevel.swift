@@ -1,6 +1,6 @@
 //
 //  LogLevel.swift
-//  network
+//  corenetwork
 //
 //  Created by Ricarlo Silva on 14/11/21.
 //
