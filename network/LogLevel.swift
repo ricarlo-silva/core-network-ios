@@ -78,12 +78,5 @@ extension Level {
             return .NONE
         }
         return Level.allCases.first { $0.value == value.uppercased() } ?? .NONE
-        
-//        switch value.uppercased() {
-//        case Level.BODY.value:
-//            return .BODY
-//        default:
-//            return .NONE
-//        }
     }
 }
