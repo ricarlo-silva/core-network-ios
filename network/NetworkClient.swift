@@ -45,7 +45,7 @@ open class NetworkClient : NSObject {
     var logLevel: Level
 //    open class var shared: NetworkClient { get }
     
-    static let shared = NetworkClient()
+    public static let shared = NetworkClient()
 
     private override init() {
 //        // 1
