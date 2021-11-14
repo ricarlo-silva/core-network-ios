@@ -61,7 +61,7 @@ public class NetworkClient : NSObject {
         logLevel = Level.valueOf("body")
     }
     
-    func getRequest<T: Codable>(
+    public func getRequest<T: Codable>(
         url: URL,
         type: T.Type
     ) async -> Result<T, Error> {
