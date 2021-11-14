@@ -114,7 +114,3 @@ public class NetworkClient : NSObject {
     }
     
 }
-
-//func ~=<E: Error & Equatable>(rhs: E, lhs: Error) -> Bool {
-//    return (lhs as? E) == rhs
-//}
