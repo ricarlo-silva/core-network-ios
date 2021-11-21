@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 
 extension Data {
@@ -19,7 +20,7 @@ extension Data {
                     swiftDict[key] = keyValue
                 }
             }
-           return swiftDict.toJSON()
+            return swiftDict.toJSON()
         }
         return nil
     }
@@ -36,46 +37,104 @@ public extension Dictionary {
     }
 }
 
-//enum ApiError: Error {
-//    case badURL
-//}
+extension Encodable {
 
+    var dict : Data? {
+        guard let data = try? JSONEncoder().encode(self) else { return nil }
+//        guard let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String:Any] else { return nil }
+        return data
+    }
+    
+}
+
+enum ApiError: Error {
+    case badURL
+}
+
+
+private let CONFIG_FILE: String = "CoreNetwork"
+private let LOG_LEVEL_KEY: String = "LOG_LEVEL"
+private let BASE_URL_KEY: String = "BASE_URL"
 
 public class NetworkClient : NSObject {
-    var logLevel: Level
-//    open class var shared: NetworkClient { get }
+    
+    private var logLevel: Level
+//    private var baseUrl: String
+    
+    //    open class var shared: NetworkClient { get }
     
     public static let shared = NetworkClient()
-
+    
     private override init() {
 //        // 1
-//        guard let filePath = Bundle.main.path(forResource: "CoreNetwork", ofType: "plist") else {
-//            fatalError("Couldn't find file 'CoreNetwork.plist'.")
+//        guard let filePath = Bundle.main.path(forResource: CONFIG_FILE, ofType: "plist") else {
+//            fatalError("Couldn't find file '\(CONFIG_FILE).plist'.")
 //        }
 //        // 2
 //        let plist = NSDictionary(contentsOfFile: filePath)
-//        guard let value = plist?.object(forKey: "LOG_LEVEL") as? String else {
-//            fatalError("Couldn't find key 'LOG_LEVEL' in 'CoreNetwork.plist'.")
+//        guard let logLevel = plist?.object(forKey: LOG_LEVEL_KEY) as? String else {
+//            fatalError("Couldn't find key '\(LOG_LEVEL_KEY)' in '\(CONFIG_FILE).plist'.")
 //        }
+//
+//        self.logLevel = Level.valueOf(logLevel)
+//
+//        guard let baseUrl = plist?.object(forKey: BASE_URL_KEY) as? String else {
+//            fatalError("Couldn't find key '\(BASE_URL_KEY)' in '\(CONFIG_FILE).plist'.")
+//        }
+//
+//        self.baseUrl = baseUrl
         
-        logLevel = Level.valueOf("body")
+        self.logLevel = Level.valueOf("body")
+        
     }
     
     public func getRequest<T: Codable>(
-        url: URL,
+        request: Request,
         type: T.Type
     ) async -> Result<T, Error> {
-            
+        
         do {
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
             
-            let (data, response) = try await URLSession.shared.data(for: request)
+            guard var urlComponents = URLComponents(string: request.path) else {
+                return .failure(ApiError.badURL)
+            }
+
+            urlComponents.queryItems = request.queries.filter {
+                !$0.key.isEmpty && $0.value != nil
+            }.map {
+                URLQueryItem(name: $0.key, value: "\($0.value ?? "")")
+            }
+
+            guard let url = urlComponents.url else {
+                return .failure(ApiError.badURL)
+            }
+            
+            var _request = URLRequest(url: url)
+            _request.httpMethod = request.httpMethod.rawValue
+            
+            print("\n\(_request.httpMethod ?? "") \(url.absoluteString)")
+
+            
+            request.headers.filter {
+                !$0.key.isEmpty && $0.value != nil
+            }.forEach { (key: String, value: Any?) in
+                _request.setValue("\(value ?? "")", forHTTPHeaderField: key) // TODO: review type
+            }
+            
+            print("Request Headers -> \n\(_request.allHTTPHeaderFields?.toJSON() ?? "")")
+//
+//            if let body = request.httpBody {
+//                _request.httpBody = body.dict
+//
+//                print("Body \(_request.httpBody?.toJSON() ?? "")")
+//            }
+            
+            let (data, response) = try await URLSession.shared.data(for: _request)
             
             let httpStatus = response as? HTTPURLResponse
             
-            print("\(httpStatus?.statusCode ?? 0) --> \(request.httpMethod ?? "") \(url.absoluteString)")
-
+            print("\(httpStatus?.statusCode ?? 0) --> \(_request.httpMethod ?? "") \(url.absoluteString)")
+            
             log(data: data, response: httpStatus)
             
             let mappedResponse = try JSONDecoder().decode(T.self, from: data)
@@ -87,12 +146,12 @@ public class NetworkClient : NSObject {
                 print("parse")
             case is HTTPURLResponse:
                 print("http")
-    //        case is NSError:
-    //            print("http")
+                //        case is NSError:
+                //            print("http")
             default:
                 print("")
             }
-      
+            
             return .failure(error)
         }
     }
@@ -106,10 +165,10 @@ public class NetworkClient : NSObject {
         case .HEADERS:
             break
         case .BODY:
-            print("All headers: \(response?.allHeaderFields.toJSON() ?? "")")
-
-            print("Response \(data.toJSON() ?? "")")
-
+            print("Response Headers ->\n\(response?.allHeaderFields.toJSON() ?? "")")
+            
+            print("Response ->\n\(data.toJSON() ?? "")")
+            
         }
     }
     

@@ -11,7 +11,8 @@ enum Level: String, CaseIterable {
     
   /** No logs. */
   case NONE = "NONE"
-  /**
+  
+    /**
    * Logs request and response lines.
    *
    * <p>Example:
@@ -22,7 +23,8 @@ enum Level: String, CaseIterable {
    * }</pre>
    */
   case BASIC = "BASIC"
-  /**
+  
+    /**
    * Logs request and response lines and their respective headers.
    *
    * <p>Example:
@@ -40,7 +42,8 @@ enum Level: String, CaseIterable {
    * }</pre>
    */
   case HEADERS = "HEADERS"
-  /**
+  
+    /**
    * Logs request and response lines and their respective headers and bodies (if present).
    *
    * <p>Example:

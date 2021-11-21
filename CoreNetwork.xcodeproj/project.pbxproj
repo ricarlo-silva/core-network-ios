@@ -14,6 +14,8 @@
 		AD1553722740B6D500F2A17A /* NetworkClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1553712740B6D500F2A17A /* NetworkClient.swift */; };
 		AD15537427414CB000F2A17A /* LogLevel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD15537327414CB000F2A17A /* LogLevel.swift */; };
 		AD15538B2741A4AE00F2A17A /* LogLevelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD15538A2741A4AE00F2A17A /* LogLevelTests.swift */; };
+		ADB17A9427496A2B00FEA009 /* HttpMethod.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADB17A9327496A2B00FEA009 /* HttpMethod.swift */; };
+		ADB17A962749716300FEA009 /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADB17A952749716300FEA009 /* Request.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,6 +37,8 @@
 		AD1553712740B6D500F2A17A /* NetworkClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkClient.swift; sourceTree = "<group>"; };
 		AD15537327414CB000F2A17A /* LogLevel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogLevel.swift; sourceTree = "<group>"; };
 		AD15538A2741A4AE00F2A17A /* LogLevelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogLevelTests.swift; sourceTree = "<group>"; };
+		ADB17A9327496A2B00FEA009 /* HttpMethod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HttpMethod.swift; sourceTree = "<group>"; };
+		ADB17A952749716300FEA009 /* Request.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,6 +85,8 @@
 				AD15535B2740B4FA00F2A17A /* network.docc */,
 				AD1553712740B6D500F2A17A /* NetworkClient.swift */,
 				AD15537327414CB000F2A17A /* LogLevel.swift */,
+				ADB17A9327496A2B00FEA009 /* HttpMethod.swift */,
+				ADB17A952749716300FEA009 /* Request.swift */,
 			);
 			path = corenetwork;
 			sourceTree = "<group>";
@@ -205,6 +211,8 @@
 			files = (
 				AD15535C2740B4FA00F2A17A /* network.docc in Sources */,
 				AD15537427414CB000F2A17A /* LogLevel.swift in Sources */,
+				ADB17A962749716300FEA009 /* Request.swift in Sources */,
+				ADB17A9427496A2B00FEA009 /* HttpMethod.swift in Sources */,
 				AD1553722740B6D500F2A17A /* NetworkClient.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

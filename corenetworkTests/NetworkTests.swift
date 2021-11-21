@@ -20,13 +20,27 @@ class NetworkTests: XCTestCase {
     
     func testExample() async throws {
         
-        guard let url = URL(string: "https://www.mockachino.com/736ea5cc-a723-43/users") else {
-            return
-        }
-        let result = await NetworkClient.shared.getRequest(url: url, type: User.self)
+        let requet = Request(
+            path: "https://api.github.com/repos/ricarlo-silva/sample-app-ios",
+            httpMethod: .GET,
+            queries: [
+                "page": 1,
+                "": "closed",
+                "q": nil
+            ],
+            headers: [
+                "accept": "application/vnd.github.v3+json",
+                "": "test",
+                "q": nil
+            ]
+//            httpBody: User(name: "", email: "")
+        )
+        
+        let result = await NetworkClient.shared.getRequest(request: requet, type: RepositoryResponse.self)
+        
         switch result {
-        case .success(let user):
-            XCTAssertEqual(user.name, "test")
+        case .success(let repo):
+            XCTAssertEqual(repo.name, "sample-app-ios")
             
         case .failure(let error):
             XCTFail(error.localizedDescription)
@@ -35,10 +49,14 @@ class NetworkTests: XCTestCase {
     
     func testDecodingError() async throws {
         
-        guard let url = URL(string: "https://www.mockachino.com/736ea5cc-a723-43/users") else {
-            return
-        }
-        let result = await NetworkClient.shared.getRequest(url: url, type: String.self)
+        let requet = Request(
+            path: "https://api.github.com/repos/ricarlo-silva/sample-app-ios",
+            httpMethod: .GET
+//            httpBody: ""
+        )
+        
+        let result = await NetworkClient.shared.getRequest(request: requet, type: String.self)
+        
         switch result {
         case .success:
             XCTFail("llk")
@@ -55,7 +73,41 @@ class NetworkTests: XCTestCase {
     }
 }
 
-struct User: Codable {
+struct RepositoryResponse: Codable {
+    
+    let id: Int
+    let nodeID: String
     let name: String
-    let email: String
+    let fullName: String
+    let owner: OwnerResponse
+    let htmlURL: String
+    let language: String
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case nodeID = "node_id"
+        case name
+        case fullName = "full_name"
+        case owner
+        case htmlURL = "html_url"
+        case language
+    }
+}
+
+// MARK: - Owner
+struct OwnerResponse: Codable {
+    
+    let login: String
+    let id: Int
+    let nodeID: String
+    let avatarURL: String
+    let type: String
+
+    enum CodingKeys: String, CodingKey {
+        case login
+        case id
+        case nodeID = "node_id"
+        case avatarURL = "avatar_url"
+        case type
+    }
 }
