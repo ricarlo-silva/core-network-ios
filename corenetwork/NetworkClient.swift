@@ -47,10 +47,15 @@ extension Encodable {
     
 }
 
-enum ApiError: Error {
-    case badURL
+enum ApiErrorException: Error {
+    case BadURL
+    case ApiError(_ error: ApiError)
+    case Unauthorized
 }
 
+struct ApiError: Codable {
+    let message: String
+}
 
 private let CONFIG_FILE: String = "CoreNetwork"
 private let LOG_LEVEL_KEY: String = "LOG_LEVEL"
@@ -64,6 +69,8 @@ public class NetworkClient : NSObject {
     //    open class var shared: NetworkClient { get }
     
     public static let shared = NetworkClient()
+    
+    private var defaultHeaders: [String: Any?] = [:]
     
     private override init() {
 //        // 1
@@ -88,15 +95,19 @@ public class NetworkClient : NSObject {
         
     }
     
-    public func getRequest<T: Codable>(
-        request: Request,
+    public func setup(defaultHeaders: [String: Any?] = [:]) {
+        self.defaultHeaders = defaultHeaders
+    }
+    
+    public func getRequest<T: Codable, R: Codable>(
+        request: Request<R>,
         type: T.Type
     ) async -> Result<T, Error> {
         
         do {
             
             guard var urlComponents = URLComponents(string: request.path) else {
-                return .failure(ApiError.badURL)
+                return .failure(ApiErrorException.BadURL)
             }
 
             urlComponents.queryItems = request.queries.filter {
@@ -106,7 +117,7 @@ public class NetworkClient : NSObject {
             }
 
             guard let url = urlComponents.url else {
-                return .failure(ApiError.badURL)
+                return .failure(ApiErrorException.BadURL)
             }
             
             var _request = URLRequest(url: url)
@@ -114,31 +125,47 @@ public class NetworkClient : NSObject {
             
             print("\n\(_request.httpMethod ?? "") \(url.absoluteString)")
 
+//            defaultHeaders.merge(request.headers) { (current, _) in current }
+
+            defaultHeaders.filter {
+                !$0.key.isEmpty && $0.value != nil
+            }.forEach {
+                _request.setValue("\($0.value ?? "")", forHTTPHeaderField: $0.key)
+            }
             
             request.headers.filter {
                 !$0.key.isEmpty && $0.value != nil
-            }.forEach { (key: String, value: Any?) in
-                _request.setValue("\(value ?? "")", forHTTPHeaderField: key) // TODO: review type
+            }.forEach {
+                _request.setValue("\($0.value ?? "")", forHTTPHeaderField: $0.key)
             }
             
-            print("Request Headers -> \n\(_request.allHTTPHeaderFields?.toJSON() ?? "")")
-//
-//            if let body = request.httpBody {
-//                _request.httpBody = body.dict
-//
-//                print("Body \(_request.httpBody?.toJSON() ?? "")")
-//            }
+            print("Request Headers\n\(_request.allHTTPHeaderFields?.toJSON() ?? "")")
+
+            if let body = request.httpBody {
+                _request.httpBody = body.dict
+                print("Request Body\n\(_request.httpBody?.toJSON() ?? "")")
+            }
             
             let (data, response) = try await URLSession.shared.data(for: _request)
             
             let httpStatus = response as? HTTPURLResponse
-            
-            print("\(httpStatus?.statusCode ?? 0) --> \(_request.httpMethod ?? "") \(url.absoluteString)")
+            let statusCode = httpStatus?.statusCode ?? 0
+
+            print("\(statusCode) --> \(_request.httpMethod ?? "") \(url.absoluteString)")
             
             log(data: data, response: httpStatus)
             
-            let mappedResponse = try JSONDecoder().decode(T.self, from: data)
-            return .success(mappedResponse)
+            switch statusCode {
+            case 200 ... 299:
+//                guard data != nil else { return .success(nil) }
+                let mappedResponse = try JSONDecoder().decode(T.self, from: data)
+                return .success(mappedResponse)
+            case 401:
+                return .failure(ApiErrorException.Unauthorized)
+            default:
+                let mappedResponse = try JSONDecoder().decode(ApiError.self, from: data)
+                return .failure(ApiErrorException.ApiError(mappedResponse))
+            }
         } catch {
             
             switch error {
@@ -146,8 +173,6 @@ public class NetworkClient : NSObject {
                 print("parse")
             case is HTTPURLResponse:
                 print("http")
-                //        case is NSError:
-                //            print("http")
             default:
                 print("")
             }
@@ -165,10 +190,8 @@ public class NetworkClient : NSObject {
         case .HEADERS:
             break
         case .BODY:
-            print("Response Headers ->\n\(response?.allHeaderFields.toJSON() ?? "")")
-            
-            print("Response ->\n\(data.toJSON() ?? "")")
-            
+            print("Response Headers\n\(response?.allHeaderFields.toJSON() ?? "")")
+            print("Response Body\n\(data.toJSON() ?? "")")
         }
     }
     
