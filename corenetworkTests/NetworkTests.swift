@@ -13,9 +13,16 @@ class NetworkTests: XCTestCase {
     private let apiClient = NetworkClient.shared
     
     override func setUp() {
-        apiClient.setup(defaultHeaders: [
-            "x-ip": "127.0.0.1"
-        ])
+        apiClient.setup(
+//            defaultHeaders: [
+//                "x-ip": "127.0.0.1"
+//            ],
+            authenticator: AuthenticatorInterceptor(sessionLocal: SessionLocal()),
+            interceptors: [
+                DefaultInterceptor(),
+                TokenInterceptor(sessionLocal: SessionLocal())
+            ]
+        )
     }
     
     override func setUpWithError() throws {
@@ -41,10 +48,10 @@ class NetworkTests: XCTestCase {
                 "": "test",
                 "q": nil
             ]
-//            httpBody: User(name: "", email: "")
+            //            httpBody: User(name: "", email: "")
         )
         
-        let result = await apiClient.getRequest(request: requet, type: RepositoryResponse.self)
+        let result = await apiClient.call(request: requet, type: RepositoryResponse.self)
         
         switch result {
         case .success(let repo):
@@ -75,7 +82,7 @@ class NetworkTests: XCTestCase {
             )
         )
         
-        let result = await apiClient.getRequest(request: requet, type: RepositoryResponse.self)
+        let result = await apiClient.call(request: requet, type: RepositoryResponse.self)
         
         switch result {
         case .success(let repo):
@@ -106,7 +113,7 @@ class NetworkTests: XCTestCase {
             )
         )
         
-        let result = await apiClient.getRequest(request: requet, type: RepositoryResponse.self)
+        let result = await apiClient.call(request: requet, type: RepositoryResponse.self)
         
         switch result {
         case .success(let repo):
@@ -137,16 +144,16 @@ class NetworkTests: XCTestCase {
             )
         )
         
-        let result = await apiClient.getRequest(request: requet, type: RepositoryResponse.self)
+        let result = await apiClient.call(request: requet, type: RepositoryResponse.self)
         
         switch result {
         case .success(let repo):
             XCTAssertEqual(repo.name, "sample-app-ios")
         case .failure(let error):
             switch error {
-            case ApiErrorException.Unauthorized:
+            case HttpException.Unauthorized:
                 XCTFail(error.localizedDescription)
-            case ApiErrorException.ApiError(let error):
+            case HttpException.ApiError(let error):
                 XCTAssertEqual(error.message, "not found")
             default:
                 XCTFail(error.localizedDescription)
@@ -174,7 +181,7 @@ class NetworkTests: XCTestCase {
             )
         )
         
-        let result = await apiClient.getRequest(request: requet, type: RepositoryResponse.self)
+        let result = await apiClient.call(request: requet, type: RepositoryResponse.self)
         
         switch result {
         case .success(let repo):
@@ -185,23 +192,47 @@ class NetworkTests: XCTestCase {
         }
     }
     
-//    func testDecodingError() async throws {
-//
-//        let requet = Request<RepositoryResponse>(
-//            path: "https://05cf207c-4c73-4096-8de1-8d880bb934e7.mock.pstmn.io/news",
-//            httpMethod: .GET
-////            httpBody: ""
-//        )
-//
-//        let result = await apiClient.getRequest(request: requet, type: String.self)
-//
-//        switch result {
-//        case .success:
-//            XCTFail("llk")
-//        case .failure(let error):
-//            XCTAssertTrue(error is DecodingError)
-//        }
-//    }
+    func testPostUnauthorized() async throws {
+        
+        let requet = Request<RepoRequest>(
+            path: "https://05cf207c-4c73-4096-8de1-8d880bb934e7.mock.pstmn.io/user",
+            httpMethod: .GET
+        )
+        
+        let result = await apiClient.call(request: requet, type: OwnerResponse.self)
+        
+        switch result {
+        case .success(let repo):
+            XCTAssertEqual(repo.login, "ricarlo-silva")
+        case .failure(let error):
+            switch error {
+            case HttpException.Unauthorized:
+                XCTFail(error.localizedDescription)
+            case HttpException.ApiError(let error):
+                XCTAssertEqual(error.message, "not found")
+            default:
+                XCTFail(error.localizedDescription)
+            }
+        }
+    }
+    
+    //    func testDecodingError() async throws {
+    //
+    //        let requet = Request<RepositoryResponse>(
+    //            path: "https://05cf207c-4c73-4096-8de1-8d880bb934e7.mock.pstmn.io/news",
+    //            httpMethod: .GET
+    ////            httpBody: ""
+    //        )
+    //
+    //        let result = await apiClient.call(request: requet, type: String.self)
+    //
+    //        switch result {
+    //        case .success:
+    //            XCTFail("llk")
+    //        case .failure(let error):
+    //            XCTAssertTrue(error is DecodingError)
+    //        }
+    //    }
     
     func testPerformanceExample() throws {
         // This is an example of a performance test case.
@@ -230,7 +261,7 @@ struct RepositoryResponse: Codable {
     let htmlURL: String
     let language: String
     let visibility: String
-
+    
     enum CodingKeys: String, CodingKey {
         case id
         case nodeID = "node_id"
@@ -251,12 +282,82 @@ struct OwnerResponse: Codable {
     let nodeID: String
     let avatarURL: String
     let type: String
-
+    
     enum CodingKeys: String, CodingKey {
         case login
         case id
         case nodeID = "node_id"
         case avatarURL = "avatar_url"
         case type
+    }
+}
+
+class DefaultInterceptor : InterceptorProtocol {
+    
+    func intercept(request: URLRequest) async -> Result<URLRequest, Error> {
+        var _request = request
+        _request.setValue("ios", forHTTPHeaderField: "x-os")
+        _request.setValue("127.0.0.1", forHTTPHeaderField: "x-ip")
+        return .success(_request)
+    }
+}
+
+class TokenInterceptor : InterceptorProtocol {
+    
+    private let sessionLocal: SessionLocalProtocol
+    
+    init(sessionLocal: SessionLocalProtocol) {
+        self.sessionLocal = sessionLocal
+    }
+    
+    func intercept(request: URLRequest) async -> Result<URLRequest, Error> {
+        var _request = request
+        if let token = sessionLocal.getToken() {
+            _request.setValue(token, forHTTPHeaderField: "token")
+        }
+        return .success(_request)
+    }
+}
+
+class AuthenticatorInterceptor : InterceptorProtocol {
+    
+    private let sessionLocal: SessionLocalProtocol
+    
+    init(sessionLocal: SessionLocalProtocol) {
+        self.sessionLocal = sessionLocal
+    }
+    
+    func intercept(request: URLRequest) async -> Result<URLRequest, Error> {
+        
+        // TODO: refresh token
+        
+        sessionLocal.saveToken(token: "123")
+//        var _request = request
+//        _request.setValue("456", forHTTPHeaderField: "token")
+        return .success(request)
+    }
+}
+
+
+protocol SessionLocalProtocol {
+    func saveToken(token: String)
+    func getToken() -> String?
+}
+
+class SessionLocal: SessionLocalProtocol {
+    
+    private let TOKEN_KEY = "TOKEN_KEY"
+    private let defaults: UserDefaults
+    
+    init(defaults: UserDefaults = UserDefaults.standard) {
+        self.defaults = defaults
+    }
+    
+    func saveToken(token: String) {
+        defaults.set(token, forKey: TOKEN_KEY)
+    }
+    
+    func getToken() -> String? {
+        return defaults.string(forKey: TOKEN_KEY)
     }
 }

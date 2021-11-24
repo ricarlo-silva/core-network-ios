@@ -47,7 +47,7 @@ extension Encodable {
     
 }
 
-enum ApiErrorException: Error {
+enum HttpException: Error {
     case BadURL
     case ApiError(_ error: ApiError)
     case Unauthorized
@@ -70,7 +70,12 @@ public class NetworkClient : NSObject {
     
     public static let shared = NetworkClient()
     
-    private var defaultHeaders: [String: Any?] = [:]
+//    private var defaultHeaders: [String: Any?] = [:]
+    
+    private var authenticator: InterceptorProtocol? = nil
+    
+    private var interceptors: [InterceptorProtocol] = []
+
     
     private override init() {
 //        // 1
@@ -95,11 +100,17 @@ public class NetworkClient : NSObject {
         
     }
     
-    public func setup(defaultHeaders: [String: Any?] = [:]) {
-        self.defaultHeaders = defaultHeaders
+    public func setup(
+//        defaultHeaders: [String: Any?] = [:],
+        authenticator: InterceptorProtocol,
+        interceptors: [InterceptorProtocol] = []
+    ) {
+//        self.defaultHeaders = defaultHeaders
+        self.authenticator = authenticator
+        self.interceptors = interceptors
     }
     
-    public func getRequest<T: Codable, R: Codable>(
+    public func call<T: Codable, R: Codable>(
         request: Request<R>,
         type: T.Type
     ) async -> Result<T, Error> {
@@ -107,7 +118,7 @@ public class NetworkClient : NSObject {
         do {
             
             guard var urlComponents = URLComponents(string: request.path) else {
-                return .failure(ApiErrorException.BadURL)
+                return .failure(HttpException.BadURL)
             }
 
             urlComponents.queryItems = request.queries.filter {
@@ -117,7 +128,7 @@ public class NetworkClient : NSObject {
             }
 
             guard let url = urlComponents.url else {
-                return .failure(ApiErrorException.BadURL)
+                return .failure(HttpException.BadURL)
             }
             
             var _request = URLRequest(url: url)
@@ -127,16 +138,26 @@ public class NetworkClient : NSObject {
 
 //            defaultHeaders.merge(request.headers) { (current, _) in current }
 
-            defaultHeaders.filter {
-                !$0.key.isEmpty && $0.value != nil
-            }.forEach {
-                _request.setValue("\($0.value ?? "")", forHTTPHeaderField: $0.key)
-            }
+//            defaultHeaders.filter {
+//                !$0.key.isEmpty && $0.value != nil
+//            }.forEach {
+//                _request.setValue("\($0.value ?? "")", forHTTPHeaderField: $0.key)
+//            }
             
             request.headers.filter {
                 !$0.key.isEmpty && $0.value != nil
             }.forEach {
                 _request.setValue("\($0.value ?? "")", forHTTPHeaderField: $0.key)
+            }
+            
+            for interceptor in interceptors {
+                let result = await interceptor.intercept(request: _request)
+                switch result {
+                case .success(let request):
+                    _request = request
+                case .failure(let error):
+                    return .failure(error)
+                }
             }
             
             print("Request Headers\n\(_request.allHTTPHeaderFields?.toJSON() ?? "")")
@@ -161,10 +182,16 @@ public class NetworkClient : NSObject {
                 let mappedResponse = try JSONDecoder().decode(T.self, from: data)
                 return .success(mappedResponse)
             case 401:
-                return .failure(ApiErrorException.Unauthorized)
+                let result = await authenticator?.intercept(request: _request)
+                switch result {
+                case .success:
+                    return await call(request: request, type: type)
+                default:
+                    return .failure(HttpException.Unauthorized)
+                }
             default:
                 let mappedResponse = try JSONDecoder().decode(ApiError.self, from: data)
-                return .failure(ApiErrorException.ApiError(mappedResponse))
+                return .failure(HttpException.ApiError(mappedResponse))
             }
         } catch {
             
