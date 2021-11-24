@@ -102,7 +102,7 @@ public class NetworkClient : NSObject {
     
     public func setup(
 //        defaultHeaders: [String: Any?] = [:],
-        authenticator: InterceptorProtocol,
+        authenticator: InterceptorProtocol? = nil,
         interceptors: [InterceptorProtocol] = []
     ) {
 //        self.defaultHeaders = defaultHeaders
