@@ -10,7 +10,9 @@ import XCTest
 
 class NetworkTests: XCTestCase {
     
-    private let apiClient = NetworkClient.shared
+    private lazy var apiClient: NetworkClient = {
+        return NetworkClient.shared
+    }()
     
     override func setUp() {
         apiClient.setup(
@@ -36,13 +38,13 @@ class NetworkTests: XCTestCase {
     func testGet() async throws {
         
         let requet = Request<RepositoryResponse>(
-            path: "https://05cf207c-4c73-4096-8de1-8d880bb934e7.mock.pstmn.io/news",
+            path: "https://api.github.com/repos/ricarlo-silva/sample-app-ios",
             httpMethod: .GET,
-            queries: [
-                "page": 1,
-                "": "closed",
-                "q": nil
-            ],
+//            queries: [
+//                "page": 1,
+//                "": "closed",
+//                "q": nil
+//            ],
             headers: [
                 "accept": "application/vnd.github.v3+json",
                 "": "test",
