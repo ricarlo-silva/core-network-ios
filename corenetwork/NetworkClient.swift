@@ -6,62 +6,23 @@
 //
 
 import Foundation
-import SwiftUI
 
+private let Content_Type_Form_Urlencoded = "application/x-www-form-urlencoded"
+private let Content_Type_Key = "Content-Type"
 
-extension Data {
-    
-    func toJSON() -> String? {
-        if let jsonData = try? JSONSerialization.jsonObject(with: self, options: []) as? NSDictionary {
-            var swiftDict: [String: Any] = [:]
-            for key in jsonData.allKeys {
-                let stringKey = key as? String
-                if let key = stringKey, let keyValue = jsonData.value(forKey: key) {
-                    swiftDict[key] = keyValue
-                }
-            }
-            return swiftDict.toJSON()
-        }
-        return nil
-    }
-}
-
-public extension Dictionary {
-    
-    func toJSON() -> String? {
-        if let jsonData = try? JSONSerialization.data(withJSONObject: self, options: .prettyPrinted),
-           let jsonText = String(data: jsonData, encoding: String.Encoding.ascii) {
-            return jsonText
-        }
-        return nil
-    }
-}
-
-extension Encodable {
-
-    var dict : Data? {
-        guard let data = try? JSONEncoder().encode(self) else { return nil }
-//        guard let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String:Any] else { return nil }
-        return data
-    }
-    
-}
-
-enum HttpException: Error {
-    case BadURL
-    case ApiError(_ error: ApiError)
-    case Unauthorized
-}
-
-struct ApiError: Codable {
-    let message: String
-}
 
 private let CONFIG_FILE: String = "CoreNetwork"
 private let LOG_LEVEL_KEY: String = "LOG_LEVEL"
 private let BASE_URL_KEY: String = "BASE_URL"
 
-public class NetworkClient : NSObject {
+public protocol NetworkClientProtocol {
+    
+    func setup(authenticator: InterceptorProtocol?, interceptors: [InterceptorProtocol])
+    func call<T: Codable>(request: Request, type: T.Type) async -> Result<T, Error>
+    
+}
+
+public class NetworkClient : NSObject, NetworkClientProtocol {
     
     private var logLevel: Level
 //    private var baseUrl: String
@@ -69,8 +30,6 @@ public class NetworkClient : NSObject {
     //    open class var shared: NetworkClient { get }
     
     public static let shared = NetworkClient()
-    
-//    private var defaultHeaders: [String: Any?] = [:]
     
     private var authenticator: InterceptorProtocol? = nil
     
@@ -101,17 +60,15 @@ public class NetworkClient : NSObject {
     }
     
     public func setup(
-//        defaultHeaders: [String: Any?] = [:],
         authenticator: InterceptorProtocol? = nil,
         interceptors: [InterceptorProtocol] = []
     ) {
-//        self.defaultHeaders = defaultHeaders
         self.authenticator = authenticator
         self.interceptors = interceptors
     }
     
-    public func call<T: Codable, R: Codable>(
-        request: Request<R>,
+    public func call<T: Codable>(
+        request: Request,
         type: T.Type
     ) async -> Result<T, Error> {
         
@@ -120,13 +77,17 @@ public class NetworkClient : NSObject {
             guard var urlComponents = URLComponents(string: request.path) else {
                 return .failure(HttpException.BadURL)
             }
-
-            urlComponents.queryItems = request.queries.filter {
+            
+            let queries = request.queries.filter {
                 !$0.key.isEmpty && $0.value != nil
-            }.map {
-                URLQueryItem(name: $0.key, value: "\($0.value ?? "")")
             }
-
+            
+            if(!queries.isEmpty) {
+                urlComponents.queryItems = queries.map {
+                    URLQueryItem(name: $0.key, value: "\($0.value ?? "")")
+                }
+            }
+            
             guard let url = urlComponents.url else {
                 return .failure(HttpException.BadURL)
             }
@@ -135,14 +96,6 @@ public class NetworkClient : NSObject {
             _request.httpMethod = request.httpMethod.rawValue
             
             print("\n\(_request.httpMethod ?? "") \(url.absoluteString)")
-
-//            defaultHeaders.merge(request.headers) { (current, _) in current }
-
-//            defaultHeaders.filter {
-//                !$0.key.isEmpty && $0.value != nil
-//            }.forEach {
-//                _request.setValue("\($0.value ?? "")", forHTTPHeaderField: $0.key)
-//            }
             
             request.headers.filter {
                 !$0.key.isEmpty && $0.value != nil
@@ -161,16 +114,20 @@ public class NetworkClient : NSObject {
             }
             
             print("Request Headers\n\(_request.allHTTPHeaderFields?.toJSON() ?? "")")
-
+            
             if let body = request.httpBody {
-                _request.httpBody = body.dict
-                print("Request Body\n\(_request.httpBody?.toJSON() ?? "")")
+                if request.headers.contains(where: { $0.key == Content_Type_Key && "\($0.value ?? "")" == Content_Type_Form_Urlencoded }) {
+                    _request.httpBody = body.encode()
+                } else {
+                    _request.httpBody = body
+                }
+                print("Request Body\n\(_request.httpBody?.toDictionary()?.toJSON() ?? "")")
             }
             
             let config = URLSessionConfiguration.ephemeral
             config.timeoutIntervalForRequest = 30
             config.timeoutIntervalForResource = 60
-            let (data, response) = try await URLSession(configuration: config).data(for: _request)
+            let (data, response) = try await URLSession(configuration: config, delegate: nil, delegateQueue: .main).data(for: _request)
             
             let httpStatus = response as? HTTPURLResponse
             let statusCode = httpStatus?.statusCode ?? 0
@@ -181,10 +138,9 @@ public class NetworkClient : NSObject {
             
             switch statusCode {
             case 200 ... 299:
-//                guard data != nil else { return .success(nil) }
                 let mappedResponse = try JSONDecoder().decode(T.self, from: data)
                 return .success(mappedResponse)
-            case 401:
+            case 401, 403:
                 let result = await authenticator?.intercept(request: _request)
                 switch result {
                 case .success:
@@ -193,20 +149,10 @@ public class NetworkClient : NSObject {
                     return .failure(HttpException.Unauthorized)
                 }
             default:
-                let mappedResponse = try JSONDecoder().decode(ApiError.self, from: data)
+                let mappedResponse = try JSONDecoder().decode(ApiErrorResponse.self, from: data)
                 return .failure(HttpException.ApiError(mappedResponse))
             }
         } catch {
-            
-            switch error {
-            case is DecodingError:
-                print("parse")
-            case is HTTPURLResponse:
-                print("http")
-            default:
-                print("")
-            }
-            
             return .failure(error)
         }
     }
@@ -221,7 +167,7 @@ public class NetworkClient : NSObject {
             break
         case .BODY:
             print("Response Headers\n\(response?.allHeaderFields.toJSON() ?? "")")
-            print("Response Body\n\(data.toJSON() ?? "")")
+            print("Response Body\n\(data.toDictionary()?.toJSON() ?? "")")
         }
     }
     

@@ -15,6 +15,10 @@
 		AD15537427414CB000F2A17A /* LogLevel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD15537327414CB000F2A17A /* LogLevel.swift */; };
 		AD15538B2741A4AE00F2A17A /* LogLevelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD15538A2741A4AE00F2A17A /* LogLevelTests.swift */; };
 		AD804E7D274B430900BDE205 /* InterceptorProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD804E7C274B430900BDE205 /* InterceptorProtocol.swift */; };
+		AD9C95332760446A00A73CDB /* HttpException.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD9C95322760446A00A73CDB /* HttpException.swift */; };
+		AD9C95352760459400A73CDB /* CodableExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD9C95342760459400A73CDB /* CodableExtensions.swift */; };
+		AD9C9537276045C100A73CDB /* ApiErrorResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD9C9536276045C100A73CDB /* ApiErrorResponse.swift */; };
+		AD9C9539276045F300A73CDB /* SerializationExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD9C9538276045F300A73CDB /* SerializationExtensions.swift */; };
 		ADB17A9427496A2B00FEA009 /* HttpMethod.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADB17A9327496A2B00FEA009 /* HttpMethod.swift */; };
 		ADB17A962749716300FEA009 /* Request.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADB17A952749716300FEA009 /* Request.swift */; };
 /* End PBXBuildFile section */
@@ -39,6 +43,10 @@
 		AD15537327414CB000F2A17A /* LogLevel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogLevel.swift; sourceTree = "<group>"; };
 		AD15538A2741A4AE00F2A17A /* LogLevelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogLevelTests.swift; sourceTree = "<group>"; };
 		AD804E7C274B430900BDE205 /* InterceptorProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterceptorProtocol.swift; sourceTree = "<group>"; };
+		AD9C95322760446A00A73CDB /* HttpException.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HttpException.swift; sourceTree = "<group>"; };
+		AD9C95342760459400A73CDB /* CodableExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodableExtensions.swift; sourceTree = "<group>"; };
+		AD9C9536276045C100A73CDB /* ApiErrorResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApiErrorResponse.swift; sourceTree = "<group>"; };
+		AD9C9538276045F300A73CDB /* SerializationExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SerializationExtensions.swift; sourceTree = "<group>"; };
 		ADB17A9327496A2B00FEA009 /* HttpMethod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HttpMethod.swift; sourceTree = "<group>"; };
 		ADB17A952749716300FEA009 /* Request.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Request.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -90,6 +98,10 @@
 				ADB17A9327496A2B00FEA009 /* HttpMethod.swift */,
 				ADB17A952749716300FEA009 /* Request.swift */,
 				AD804E7C274B430900BDE205 /* InterceptorProtocol.swift */,
+				AD9C95322760446A00A73CDB /* HttpException.swift */,
+				AD9C95342760459400A73CDB /* CodableExtensions.swift */,
+				AD9C9536276045C100A73CDB /* ApiErrorResponse.swift */,
+				AD9C9538276045F300A73CDB /* SerializationExtensions.swift */,
 			);
 			path = corenetwork;
 			sourceTree = "<group>";
@@ -216,8 +228,12 @@
 				AD15537427414CB000F2A17A /* LogLevel.swift in Sources */,
 				ADB17A962749716300FEA009 /* Request.swift in Sources */,
 				ADB17A9427496A2B00FEA009 /* HttpMethod.swift in Sources */,
+				AD9C95352760459400A73CDB /* CodableExtensions.swift in Sources */,
+				AD9C95332760446A00A73CDB /* HttpException.swift in Sources */,
 				AD1553722740B6D500F2A17A /* NetworkClient.swift in Sources */,
 				AD804E7D274B430900BDE205 /* InterceptorProtocol.swift in Sources */,
+				AD9C9539276045F300A73CDB /* SerializationExtensions.swift in Sources */,
+				AD9C9537276045C100A73CDB /* ApiErrorResponse.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

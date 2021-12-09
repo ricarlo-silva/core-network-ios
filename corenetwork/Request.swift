@@ -7,11 +7,11 @@
 
 import Foundation
 
-public struct Request<T: Codable> {
+public struct Request {
     
     public let path: String
     public let httpMethod: HttpMethod
-    public let httpBody: T?
+    public let httpBody: Data?
     public let queries: [String: Any?]
     public let headers: [String: Any?]
     
@@ -20,7 +20,7 @@ public struct Request<T: Codable> {
         httpMethod: HttpMethod,
         queries: [String: Any?] = [:],
         headers: [String: Any?] = [:],
-        httpBody: T? = nil
+        httpBody: Data? = nil
     ) {
         self.path = path
         self.httpMethod = httpMethod

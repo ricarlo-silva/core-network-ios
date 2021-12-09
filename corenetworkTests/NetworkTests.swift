@@ -10,15 +10,12 @@ import XCTest
 
 class NetworkTests: XCTestCase {
     
-    private lazy var apiClient: NetworkClient = {
+    private lazy var apiClient: NetworkClientProtocol = {
         return NetworkClient.shared
     }()
     
     override func setUp() {
         apiClient.setup(
-//            defaultHeaders: [
-//                "x-ip": "127.0.0.1"
-//            ],
             authenticator: AuthenticatorInterceptor(sessionLocal: SessionLocal()),
             interceptors: [
                 DefaultInterceptor(),
@@ -37,7 +34,7 @@ class NetworkTests: XCTestCase {
     
     func testGet() async throws {
         
-        let requet = Request<RepositoryResponse>(
+        let request = Request(
             path: "https://api.github.com/repos/ricarlo-silva/sample-app-ios",
             httpMethod: .GET,
 //            queries: [
@@ -53,7 +50,7 @@ class NetworkTests: XCTestCase {
             //            httpBody: User(name: "", email: "")
         )
         
-        let result = await apiClient.call(request: requet, type: RepositoryResponse.self)
+        let result = await apiClient.call(request: request, type: RepositoryResponse.self)
         
         switch result {
         case .success(let repo):
@@ -66,7 +63,7 @@ class NetworkTests: XCTestCase {
     
     func testPost() async throws {
         
-        let requet = Request<RepoRequest>(
+        let request = Request(
             path: "https://05cf207c-4c73-4096-8de1-8d880bb934e7.mock.pstmn.io/news",
             httpMethod: .POST,
             queries: [
@@ -81,10 +78,10 @@ class NetworkTests: XCTestCase {
             ],
             httpBody: RepoRequest(
                 visibility: "public"
-            )
+            ).dict
         )
         
-        let result = await apiClient.call(request: requet, type: RepositoryResponse.self)
+        let result = await apiClient.call(request: request, type: RepositoryResponse.self)
         
         switch result {
         case .success(let repo):
@@ -97,7 +94,7 @@ class NetworkTests: XCTestCase {
     
     func testPut() async throws {
         
-        let requet = Request<RepoRequest>(
+        let request = Request(
             path: "https://05cf207c-4c73-4096-8de1-8d880bb934e7.mock.pstmn.io/news",
             httpMethod: .PUT,
             queries: [
@@ -112,10 +109,10 @@ class NetworkTests: XCTestCase {
             ],
             httpBody: RepoRequest(
                 visibility: "public"
-            )
+            ).dict
         )
         
-        let result = await apiClient.call(request: requet, type: RepositoryResponse.self)
+        let result = await apiClient.call(request: request, type: RepositoryResponse.self)
         
         switch result {
         case .success(let repo):
@@ -128,7 +125,7 @@ class NetworkTests: XCTestCase {
     
     func testDelete() async throws {
         
-        let requet = Request<RepoRequest>(
+        let request = Request(
             path: "https://05cf207c-4c73-4096-8de1-8d880bb934e7.mock.pstmn.io/news",
             httpMethod: .DELETE,
             queries: [
@@ -143,10 +140,10 @@ class NetworkTests: XCTestCase {
             ],
             httpBody: RepoRequest(
                 visibility: "public"
-            )
+            ).dict
         )
         
-        let result = await apiClient.call(request: requet, type: RepositoryResponse.self)
+        let result = await apiClient.call(request: request, type: RepositoryResponse.self)
         
         switch result {
         case .success(let repo):
@@ -165,7 +162,7 @@ class NetworkTests: XCTestCase {
     
     func testPatch() async throws {
         
-        let requet = Request<RepoRequest>(
+        let request = Request(
             path: "https://05cf207c-4c73-4096-8de1-8d880bb934e7.mock.pstmn.io/news",
             httpMethod: .PATCH,
             queries: [
@@ -180,10 +177,10 @@ class NetworkTests: XCTestCase {
             ],
             httpBody: RepoRequest(
                 visibility: "public"
-            )
+            ).dict
         )
         
-        let result = await apiClient.call(request: requet, type: RepositoryResponse.self)
+        let result = await apiClient.call(request: request, type: RepositoryResponse.self)
         
         switch result {
         case .success(let repo):
@@ -196,12 +193,12 @@ class NetworkTests: XCTestCase {
     
     func testPostUnauthorized() async throws {
         
-        let requet = Request<RepoRequest>(
+        let request = Request(
             path: "https://05cf207c-4c73-4096-8de1-8d880bb934e7.mock.pstmn.io/user",
             httpMethod: .GET
         )
         
-        let result = await apiClient.call(request: requet, type: OwnerResponse.self)
+        let result = await apiClient.call(request: request, type: OwnerResponse.self)
         
         switch result {
         case .success(let repo):
@@ -220,13 +217,13 @@ class NetworkTests: XCTestCase {
     
     //    func testDecodingError() async throws {
     //
-    //        let requet = Request<RepositoryResponse>(
+    //        let request = Request<RepositoryResponse>(
     //            path: "https://05cf207c-4c73-4096-8de1-8d880bb934e7.mock.pstmn.io/news",
     //            httpMethod: .GET
     ////            httpBody: ""
     //        )
     //
-    //        let result = await apiClient.call(request: requet, type: String.self)
+    //        let result = await apiClient.call(request: request, type: String.self)
     //
     //        switch result {
     //        case .success:
