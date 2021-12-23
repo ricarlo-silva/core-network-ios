@@ -24,12 +24,13 @@ public protocol NetworkClientProtocol {
 
 public class NetworkClient : NSObject, NetworkClientProtocol {
     
-    private var logLevel: Level
 //    private var baseUrl: String
     
     //    open class var shared: NetworkClient { get }
     
     public static let shared = NetworkClient()
+    
+    private let logger = Logger.shared
     
     private var authenticator: InterceptorProtocol? = nil
     
@@ -37,25 +38,19 @@ public class NetworkClient : NSObject, NetworkClientProtocol {
 
     
     private override init() {
-//        // 1
-//        guard let filePath = Bundle.main.path(forResource: CONFIG_FILE, ofType: "plist") else {
-//            fatalError("Couldn't find file '\(CONFIG_FILE).plist'.")
-//        }
-//        // 2
-//        let plist = NSDictionary(contentsOfFile: filePath)
-//        guard let logLevel = plist?.object(forKey: LOG_LEVEL_KEY) as? String else {
-//            fatalError("Couldn't find key '\(LOG_LEVEL_KEY)' in '\(CONFIG_FILE).plist'.")
-//        }
-//
-//        self.logLevel = Level.valueOf(logLevel)
-//
-//        guard let baseUrl = plist?.object(forKey: BASE_URL_KEY) as? String else {
-//            fatalError("Couldn't find key '\(BASE_URL_KEY)' in '\(CONFIG_FILE).plist'.")
-//        }
-//
-//        self.baseUrl = baseUrl
-        
-        self.logLevel = Level.valueOf("body")
+
+        if let filePath = Bundle.main.path(forResource: CONFIG_FILE, ofType: "plist") {
+            
+            let plist = NSDictionary(contentsOfFile: filePath)
+            
+            if let logLevel = plist?.object(forKey: LOG_LEVEL_KEY) as? String {
+                self.logger.logLevel = Level.valueOf(logLevel)
+            }
+
+//            if let baseUrl = plist?.object(forKey: BASE_URL_KEY) as? String {
+//                self.baseUrl = baseUrl
+//            }
+        }
         
     }
     
@@ -95,8 +90,6 @@ public class NetworkClient : NSObject, NetworkClientProtocol {
             var _request = URLRequest(url: url)
             _request.httpMethod = request.httpMethod.rawValue
             
-            print("\n\(_request.httpMethod ?? "") \(url.absoluteString)")
-            
             request.headers.filter {
                 !$0.key.isEmpty && $0.value != nil
             }.forEach {
@@ -113,16 +106,15 @@ public class NetworkClient : NSObject, NetworkClientProtocol {
                 }
             }
             
-            print("Request Headers\n\(_request.allHTTPHeaderFields?.toJSON() ?? "")")
-            
             if let body = request.httpBody {
                 if request.headers.contains(where: { $0.key == Content_Type_Key && "\($0.value ?? "")" == Content_Type_Form_Urlencoded }) {
                     _request.httpBody = body.encode()
                 } else {
                     _request.httpBody = body
                 }
-                print("Request Body\n\(_request.httpBody?.toDictionary()?.toJSON() ?? "")")
             }
+            
+            logger.log(request: _request)
             
             let config = URLSessionConfiguration.ephemeral
             config.timeoutIntervalForRequest = 30
@@ -132,9 +124,7 @@ public class NetworkClient : NSObject, NetworkClientProtocol {
             let httpStatus = response as? HTTPURLResponse
             let statusCode = httpStatus?.statusCode ?? 0
 
-            print("\(statusCode) --> \(_request.httpMethod ?? "") \(url.absoluteString)")
-            
-            log(data: data, response: httpStatus)
+            logger.log(request: _request, data: data, response: httpStatus)
             
             switch statusCode {
             case 200 ... 299:
@@ -154,20 +144,6 @@ public class NetworkClient : NSObject, NetworkClientProtocol {
             }
         } catch {
             return .failure(error)
-        }
-    }
-    
-    private func log(data: Data, response: HTTPURLResponse?) {
-        switch logLevel {
-        case .NONE:
-            break
-        case .BASIC:
-            break
-        case .HEADERS:
-            break
-        case .BODY:
-            print("Response Headers\n\(response?.allHeaderFields.toJSON() ?? "")")
-            print("Response Body\n\(data.toDictionary()?.toJSON() ?? "")")
         }
     }
     

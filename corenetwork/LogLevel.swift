@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum Level: String, CaseIterable {
+public enum Level: String, CaseIterable {
     
   /** No logs. */
   case NONE = "NONE"
