@@ -38,7 +38,7 @@ class Logger {
         
         let statusCode = response?.statusCode ?? 0
         
-        let icon = (200 ... 299).contains(statusCode) ? "🟩" : "🟥"
+        let icon = (HttpStatusCode.OK.rawValue ... 299).contains(statusCode) ? "🟩" : "🟥"
         debug("\(icon) \(statusCode) --> \(request.httpMethod ?? "") \(request.url?.absoluteString ?? "")")
         
         if(logLevel != .BASIC) {

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AD00837C277B49E500CE1668 /* HttpStatusCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD00837B277B49E500CE1668 /* HttpStatusCode.swift */; };
+		AD0083802783E9A400CE1668 /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = AD00837F2783E9A400CE1668 /* TrustKit */; };
 		AD15535C2740B4FA00F2A17A /* network.docc in Sources */ = {isa = PBXBuildFile; fileRef = AD15535B2740B4FA00F2A17A /* network.docc */; };
 		AD1553622740B4FA00F2A17A /* CoreNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD1553572740B4FA00F2A17A /* CoreNetwork.framework */; };
 		AD1553672740B4FA00F2A17A /* NetworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1553662740B4FA00F2A17A /* NetworkTests.swift */; };
@@ -35,6 +37,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		AD00837B277B49E500CE1668 /* HttpStatusCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HttpStatusCode.swift; sourceTree = "<group>"; };
 		AD1553572740B4FA00F2A17A /* CoreNetwork.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CoreNetwork.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AD15535A2740B4FA00F2A17A /* corenetwork.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = corenetwork.h; sourceTree = "<group>"; };
 		AD15535B2740B4FA00F2A17A /* network.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = network.docc; sourceTree = "<group>"; };
@@ -58,6 +61,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AD0083802783E9A400CE1668 /* TrustKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -105,6 +109,7 @@
 				AD9C9536276045C100A73CDB /* ApiErrorResponse.swift */,
 				AD9C9538276045F300A73CDB /* SerializationExtensions.swift */,
 				AD4DDF60277036F100306D48 /* Logger.swift */,
+				AD00837B277B49E500CE1668 /* HttpStatusCode.swift */,
 			);
 			path = corenetwork;
 			sourceTree = "<group>";
@@ -146,6 +151,9 @@
 			dependencies = (
 			);
 			name = CoreNetwork;
+			packageProductDependencies = (
+				AD00837F2783E9A400CE1668 /* TrustKit */,
+			);
 			productName = network;
 			productReference = AD1553572740B4FA00F2A17A /* CoreNetwork.framework */;
 			productType = "com.apple.product-type.framework";
@@ -195,6 +203,9 @@
 				Base,
 			);
 			mainGroup = AD15534D2740B4FA00F2A17A;
+			packageReferences = (
+				AD00837E2783E9A400CE1668 /* XCRemoteSwiftPackageReference "TrustKit" */,
+			);
 			productRefGroup = AD1553582740B4FA00F2A17A /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -237,6 +248,7 @@
 				AD1553722740B6D500F2A17A /* NetworkClient.swift in Sources */,
 				AD804E7D274B430900BDE205 /* InterceptorProtocol.swift in Sources */,
 				AD9C9539276045F300A73CDB /* SerializationExtensions.swift in Sources */,
+				AD00837C277B49E500CE1668 /* HttpStatusCode.swift in Sources */,
 				AD9C9537276045C100A73CDB /* ApiErrorResponse.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -514,6 +526,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		AD00837E2783E9A400CE1668 /* XCRemoteSwiftPackageReference "TrustKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "git@github.com:datatheorem/TrustKit.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AD00837F2783E9A400CE1668 /* TrustKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AD00837E2783E9A400CE1668 /* XCRemoteSwiftPackageReference "TrustKit" */;
+			productName = TrustKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AD15534E2740B4FA00F2A17A /* Project object */;
 }
