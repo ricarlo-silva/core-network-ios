@@ -79,8 +79,8 @@
 		AD15534D2740B4FA00F2A17A = {
 			isa = PBXGroup;
 			children = (
-				AD1553592740B4FA00F2A17A /* corenetwork */,
-				AD1553652740B4FA00F2A17A /* corenetworkTests */,
+				ADAD279727C0870D0019CE15 /* Sources */,
+				ADAD279827C0871D0019CE15 /* Tests */,
 				AD1553582740B4FA00F2A17A /* Products */,
 			);
 			sourceTree = "<group>";
@@ -121,6 +121,22 @@
 				AD15538A2741A4AE00F2A17A /* LogLevelTests.swift */,
 			);
 			path = corenetworkTests;
+			sourceTree = "<group>";
+		};
+		ADAD279727C0870D0019CE15 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				AD1553592740B4FA00F2A17A /* corenetwork */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		ADAD279827C0871D0019CE15 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				AD1553652740B4FA00F2A17A /* corenetworkTests */,
+			);
+			path = Tests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
