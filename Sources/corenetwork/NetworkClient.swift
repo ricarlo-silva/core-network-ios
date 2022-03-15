@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import TrustKit
+//import TrustKit
 
 private let Content_Type_Form_Urlencoded = "application/x-www-form-urlencoded"
 private let Content_Type_Key = "Content-Type"
@@ -33,20 +33,20 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
     }()
 
     // TODO: remove domain and public key hardcoded
-    private let trustKitConfig = [
-        kTSKPinnedDomains: [
-            "api.github.com": [
-                kTSKDisableDefaultReportUri: true, /// Disable reporting errors to default domain.
-                kTSKEnforcePinning: true,
-                kTSKIncludeSubdomains: true,
-//                    kTSKExpirationDate: "2020-12-20",
-                kTSKPublicKeyHashes: [
-                    "azE5Ew0LGsMgkYqiDpYay0olLAS8cxxNGUZ8OJU756p=",
-                    "azE5Ew0LGsMgkYqiDpYay0olLAS8cxxNGUZ8OJU756k=",
-                ],
-            ]
-        ]
-    ] as [String : Any]
+//    private let trustKitConfig = [
+//        kTSKPinnedDomains: [
+//            "api.github.com": [
+//                kTSKDisableDefaultReportUri: true, /// Disable reporting errors to default domain.
+//                kTSKEnforcePinning: true,
+//                kTSKIncludeSubdomains: true,
+////                    kTSKExpirationDate: "2020-12-20",
+//                kTSKPublicKeyHashes: [
+//                    "azE5Ew0LGsMgkYqiDpYay0olLAS8cxxNGUZ8OJU756p=",
+//                    "azE5Ew0LGsMgkYqiDpYay0olLAS8cxxNGUZ8OJU756k=",
+//                ],
+//            ]
+//        ]
+//    ] as [String : Any]
 
 
     // MARK: TrustKit Pinning Reference
@@ -77,7 +77,7 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
 
     
     override init() {
-        TrustKit.initSharedInstance(withConfiguration: trustKitConfig)
+//        TrustKit.initSharedInstance(withConfiguration: trustKitConfig)
         super.init()
 
         if let filePath = Bundle.main.path(forResource: CONFIG_FILE, ofType: "plist") {
@@ -190,109 +190,12 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
     
 }
 
-//final class TrustKitCertificatePinning: NSObject, URLSessionDelegate {
-//
-////    /// URLSession with configured certificate pinning
-////    lazy var session: URLSession = {
-////        URLSession(configuration: URLSessionConfiguration.ephemeral,
-////                   delegate: self,
-////                   delegateQueue: OperationQueue.main)
-////    }()
-//
-//    private let trustKitConfig = [
-//        kTSKPinnedDomains: [
-//            "www.yourwebsite.com": [
-//                kTSKDisableDefaultReportUri: true, /// Disable reporting errors to default domain.
-//                kTSKEnforcePinning: true,
-//                kTSKIncludeSubdomains: true,
-//                kTSKExpirationDate: "2020-10-09",
-//                kTSKPublicKeyHashes: [
-//                    "GesrhCSBz+OCxCt624nic/qqLXAPGUGGf5vwB5jBheU=",
-//                    "+7YVLndnzqU0VtEREXo00bJlgdmQ9T9qy2IWVVWNpcE=",
-//                ],
-//            ]
-//        ]
-//    ] as [String : Any]
-//
-//    override init() {
-//        TrustKit.initSharedInstance(withConfiguration: trustKitConfig)
-//        super.init()
-//    }
-//
-//    // MARK: TrustKit Pinning Reference
-//
-//    func urlSession(_ session: URLSession,
-//                    didReceive challenge: URLAuthenticationChallenge,
-//                    completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-//
-//        if TrustKit.sharedInstance().pinningValidator.handle(challenge, completionHandler: completionHandler) == false {
-//            // TrustKit did not handle this challenge: perhaps it was not for server trust
-//            // or the domain was not pinned. Fall back to the default behavior
-//            completionHandler(.performDefaultHandling, nil)
-//        }
-//    }
-//}
-
-//class NSURLSessionPinningDelegate: NSObject, URLSessionDelegate {
-//
-//    func urlSession(
-//        _ session: URLSession,
-//        didReceive challenge: URLAuthenticationChallenge,
-//        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
-//    ) {
-//
-//        // Adapted from OWASP https://www.owasp.org/index.php/Certificate_and_Public_Key_Pinning#iOS
-//
-//        if (challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust) {
-//            if let serverTrust = challenge.protectionSpace.serverTrust {
-//                let isServerTrusted = SecTrustEvaluateWithError(serverTrust, nil)
-//
-////                if(isServerTrusted) {
-//                //                    if let serverCertificate = SecTrustGetCertificateAtIndex(serverTrust, 0) {
-//                //                        let serverCertificateData = SecCertificateCopyData(serverCertificate)
-//                //                        let data = CFDataGetBytePtr(serverCertificateData);
-//                //                        let size = CFDataGetLength(serverCertificateData);
-//                //                        let cert1 = NSData(bytes: data, length: size)
-//                //                        let file_der = Bundle.main.path(forResource: "certificateFile", ofType: "der")
-//                //
-//                //                        if let file = file_der {
-//                //                            if let cert2 = NSData(contentsOfFile: file) {
-//                //                                if cert1.isEqual(to: cert2 as Data) {
-//                //                                    completionHandler(URLSession.AuthChallengeDisposition.useCredential, URLCredential(trust:serverTrust))
-//                //                                    return
-//                //                                }
-//                //                            }
-//                //                        }
-//                //                    }
-//                //                }
-//
-//                if(isServerTrusted) {
-//
-//                    if let serverCertificate = SecTrustGetCertificateAtIndex(serverTrust, 0) {
-//                        // Server public key
-//                        let serverPublicKey = SecCertificateCopyKey(serverCertificate)
-//                        let serverPublicKeyData = SecKeyCopyExternalRepresentation(serverPublicKey!, nil )!
-//                        let data:Data = serverPublicKeyData as Data
-//                        // Server Hash key
-////                        let serverHashKey = sha256(data: data)
-////                        // Local Hash Key
-////                        let publickKeyLocal = type(of: self).publicKeyHash
-////                        if (serverHashKey == publickKeyLocal) {
-////                            completionHandler(URLSession.AuthChallengeDisposition.useCredential, URLCredential(trust:serverTrust))
-////                            return
-////                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        // Pinning failed
-//        completionHandler(URLSession.AuthChallengeDisposition.cancelAuthenticationChallenge, nil)
-//    }
 //
 //    /**
 //     Create public key hash
 //
+//        // Adapted from OWASP https://www.owasp.org/index.php/Certificate_and_Public_Key_Pinning#iOS
+
 //     openssl s_client -servername api.spotify.com -connect api.spotify.com:443 | openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | openssl enc -base64
 //
 //     https://developer.apple.com/news/?id=g9ejcf8y
