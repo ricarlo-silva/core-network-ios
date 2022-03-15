@@ -56,11 +56,11 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
                            completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?
                            ) -> Void) {
 
-        if TrustKit.sharedInstance().pinningValidator.handle(challenge, completionHandler: completionHandler) == false {
+//        if TrustKit.sharedInstance().pinningValidator.handle(challenge, completionHandler: completionHandler) == false {
             // TrustKit did not handle this challenge: perhaps it was not for server trust
             // or the domain was not pinned. Fall back to the default behavior
             completionHandler(.performDefaultHandling, nil)
-        }
+//        }
     }
     
 //    private var baseUrl: String
