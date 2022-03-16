@@ -1,3 +1,10 @@
 ## Xcode settings
 **/xcuserdata/*
 xcuserdata/*
+
+.swiftpm/*
+.DS_Store
+/.build
+/Packages
+/*.xcodeproj
+Package.resolved

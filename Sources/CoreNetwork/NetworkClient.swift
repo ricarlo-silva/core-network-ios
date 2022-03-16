@@ -1,6 +1,6 @@
 //
 //  NetworkClient.swift
-//  corenetwork
+//  CoreNetwork
 //
 //  Created by Ricarlo Silva on 14/11/21.
 //

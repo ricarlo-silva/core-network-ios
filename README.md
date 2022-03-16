@@ -1,4 +1,4 @@
-# corenetwork-framework-ios
+# core-network-ios
 
 ## Setup
 

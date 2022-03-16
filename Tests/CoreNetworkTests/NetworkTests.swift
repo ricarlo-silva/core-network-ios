@@ -1,6 +1,6 @@
 //
-//  networkTests.swift
-//  networkTests
+//  NetworkTests.swift
+//  CoreNetworkTests
 //
 //  Created by Ricarlo Silva on 14/11/21.
 //
