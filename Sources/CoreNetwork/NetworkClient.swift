@@ -6,7 +6,7 @@
 //
 
 import Foundation
-//import TrustKit
+import TrustKit
 
 private let Content_Type_Form_Urlencoded = "application/x-www-form-urlencoded"
 private let Content_Type_Key = "Content-Type"
@@ -33,20 +33,20 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
     }()
 
     // TODO: remove domain and public key hardcoded
-//    private let trustKitConfig = [
-//        kTSKPinnedDomains: [
-//            "api.github.com": [
-//                kTSKDisableDefaultReportUri: true, /// Disable reporting errors to default domain.
-//                kTSKEnforcePinning: true,
-//                kTSKIncludeSubdomains: true,
-////                    kTSKExpirationDate: "2020-12-20",
-//                kTSKPublicKeyHashes: [
-//                    "azE5Ew0LGsMgkYqiDpYay0olLAS8cxxNGUZ8OJU756p=",
-//                    "azE5Ew0LGsMgkYqiDpYay0olLAS8cxxNGUZ8OJU756k=",
-//                ],
-//            ]
-//        ]
-//    ] as [String : Any]
+    private let trustKitConfig = [
+        kTSKPinnedDomains: [
+            "api.github.com": [
+                kTSKDisableDefaultReportUri: true, /// Disable reporting errors to default domain.
+                kTSKEnforcePinning: true,
+                kTSKIncludeSubdomains: true,
+//                    kTSKExpirationDate: "2020-12-20",
+                kTSKPublicKeyHashes: [
+                    "azE5Ew0LGsMgkYqiDpYay0olLAS8cxxNGUZ8OJU756p=",
+                    "azE5Ew0LGsMgkYqiDpYay0olLAS8cxxNGUZ8OJU756k=",
+                ],
+            ]
+        ]
+    ] as [String : Any]
 
 
     // MARK: TrustKit Pinning Reference
@@ -56,11 +56,11 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
                            completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?
                            ) -> Void) {
 
-//        if TrustKit.sharedInstance().pinningValidator.handle(challenge, completionHandler: completionHandler) == false {
+        if TrustKit.sharedInstance().pinningValidator.handle(challenge, completionHandler: completionHandler) == false {
             // TrustKit did not handle this challenge: perhaps it was not for server trust
             // or the domain was not pinned. Fall back to the default behavior
             completionHandler(.performDefaultHandling, nil)
-//        }
+        }
     }
     
 //    private var baseUrl: String
@@ -77,7 +77,7 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
 
     
     override init() {
-//        TrustKit.initSharedInstance(withConfiguration: trustKitConfig)
+        TrustKit.initSharedInstance(withConfiguration: trustKitConfig)
         super.init()
 
         if let filePath = Bundle.main.path(forResource: CONFIG_FILE, ofType: "plist") {
