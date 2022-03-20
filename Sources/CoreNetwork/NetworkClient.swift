@@ -15,6 +15,8 @@ private let Content_Type_Key = "Content-Type"
 private let CONFIG_FILE: String = "CoreNetwork"
 private let LOG_LEVEL_KEY: String = "LOG_LEVEL"
 private let BASE_URL_KEY: String = "BASE_URL"
+private let TIMEOUT_INTERVAL_FOR_REQUEST: String = "TIMEOUT_INTERVAL_FOR_REQUEST"
+private let TIMEOUT_INTERVAL_FOR_RESOURCE: String = "TIMEOUT_INTERVAL_FOR_RESOURCE"
 
 public protocol NetworkClientProtocol {
     
@@ -25,13 +27,17 @@ public protocol NetworkClientProtocol {
 
 public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate {
     
+    private lazy var config: URLSessionConfiguration = {
+        URLSessionConfiguration.ephemeral
+    }()
+    
     /// URLSession with configured certificate pinning
-    lazy var urlSession: URLSession = {
-        URLSession(configuration: URLSessionConfiguration.ephemeral,
+    private lazy var urlSession: URLSession = {
+        URLSession(configuration: config,
                    delegate: self,
                    delegateQueue: OperationQueue.main)
     }()
-
+    
     // TODO: remove domain and public key hardcoded
     private let trustKitConfig = [
         kTSKPinnedDomains: [
@@ -39,7 +45,7 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
                 kTSKDisableDefaultReportUri: true, /// Disable reporting errors to default domain.
                 kTSKEnforcePinning: true,
                 kTSKIncludeSubdomains: true,
-//                    kTSKExpirationDate: "2020-12-20",
+                //                    kTSKExpirationDate: "2020-12-20",
                 kTSKPublicKeyHashes: [
                     "azE5Ew0LGsMgkYqiDpYay0olLAS8cxxNGUZ8OJU756p=",
                     "azE5Ew0LGsMgkYqiDpYay0olLAS8cxxNGUZ8OJU756k=",
@@ -47,15 +53,15 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
             ]
         ]
     ] as [String : Any]
-
-
+    
+    
     // MARK: TrustKit Pinning Reference
-
+    
     public func urlSession(_ session: URLSession,
                            didReceive challenge: URLAuthenticationChallenge,
                            completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?
                            ) -> Void) {
-
+        
         if TrustKit.sharedInstance().pinningValidator.handle(challenge, completionHandler: completionHandler) == false {
             // TrustKit did not handle this challenge: perhaps it was not for server trust
             // or the domain was not pinned. Fall back to the default behavior
@@ -63,7 +69,7 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
         }
     }
     
-//    private var baseUrl: String
+    //    private var baseUrl: String
     
     //    open class var shared: NetworkClient { get }
     
@@ -74,12 +80,12 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
     private var authenticator: InterceptorProtocol? = nil
     
     private var interceptors: [InterceptorProtocol] = []
-
+    
     
     override init() {
         TrustKit.initSharedInstance(withConfiguration: trustKitConfig)
         super.init()
-
+        
         if let filePath = Bundle.main.path(forResource: CONFIG_FILE, ofType: "plist") {
             
             let plist = NSDictionary(contentsOfFile: filePath)
@@ -87,12 +93,19 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
             if let logLevel = plist?.object(forKey: LOG_LEVEL_KEY) as? String {
                 self.logger.logLevel = Level.valueOf(logLevel)
             }
-
-//            if let baseUrl = plist?.object(forKey: BASE_URL_KEY) as? String {
-//                self.baseUrl = baseUrl
-//            }
+            
+            //            if let baseUrl = plist?.object(forKey: BASE_URL_KEY) as? String {
+            //                self.baseUrl = baseUrl
+            //            }
+            
+            if let interval = plist?.object(forKey: TIMEOUT_INTERVAL_FOR_REQUEST) as? Double {
+                config.timeoutIntervalForRequest = interval
+            }
+            
+            if let interval = plist?.object(forKey: TIMEOUT_INTERVAL_FOR_RESOURCE) as? Double {
+                config.timeoutIntervalForResource = interval
+            }
         }
-        
     }
     
     public func setup(
@@ -157,14 +170,11 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
             
             logger.log(request: _request)
             
-//            let config = URLSessionConfiguration.ephemeral
-//            config.timeoutIntervalForRequest = 30
-//            config.timeoutIntervalForResource = 60
-            let (data, response) = try await urlSession.data(for: _request) //URLSession(configuration: config, delegate: nil, delegateQueue: .main).data(for: _request)
+            let (data, response) = try await urlSession.data(for: _request)
             
             let httpStatus = response as? HTTPURLResponse
             let statusCode = httpStatus?.statusCode ?? 0
-
+            
             logger.log(request: _request, data: data, response: httpStatus)
             
             switch statusCode {
@@ -187,18 +197,4 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
             return .failure(error)
         }
     }
-    
 }
-
-//
-//    /**
-//     Create public key hash
-//
-//        // Adapted from OWASP https://www.owasp.org/index.php/Certificate_and_Public_Key_Pinning#iOS
-
-//     openssl s_client -servername api.spotify.com -connect api.spotify.com:443 | openssl x509 -pubkey -noout | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | openssl enc -base64
-//
-//     https://developer.apple.com/news/?id=g9ejcf8y
-//     */
-//
-//}
