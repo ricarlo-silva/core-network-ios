@@ -4,12 +4,13 @@
 
 Create `CoreNetwork.plist` file and add the keys below:
 
-| Key       | Type | Value
+| Key       | Type | Values
 | ----------- | ----------- | ----------- |
 | `LOG_LEVEL` | String | `NONE`, `BASIC`, `HEADERS` or `BODY`.
-| `BASE_URL`  | String | any
-| `TIMEOUT_INTERVAL_FOR_REQUEST` | Number | any
-| `TIMEOUT_INTERVAL_FOR_RESOURCE` | Number | any
+| `BASE_URL`  | String | -
+| `TIMEOUT_INTERVAL_FOR_REQUEST` | Number | -
+| `TIMEOUT_INTERVAL_FOR_RESOURCE` | Number | -
+| `SSL_PINNING` | Array\<Dictionary> | -
 
 ## Create public key hash
 

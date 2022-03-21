@@ -38,21 +38,21 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
                    delegateQueue: OperationQueue.main)
     }()
     
-    // TODO: remove domain and public key hardcoded
-    private let trustKitConfig = [
-        kTSKPinnedDomains: [
-            "api.github.com": [
-                kTSKDisableDefaultReportUri: true, /// Disable reporting errors to default domain.
-                kTSKEnforcePinning: true,
-                kTSKIncludeSubdomains: true,
-                //                    kTSKExpirationDate: "2020-12-20",
-                kTSKPublicKeyHashes: [
-                    "azE5Ew0LGsMgkYqiDpYay0olLAS8cxxNGUZ8OJU756p=",
-                    "azE5Ew0LGsMgkYqiDpYay0olLAS8cxxNGUZ8OJU756k=",
-                ],
-            ]
-        ]
-    ] as [String : Any]
+//    // TODO: remove domain and public key hardcoded
+//    private let trustKitConfig = [
+//        kTSKPinnedDomains: [
+//            "api.github.com": [
+//                kTSKDisableDefaultReportUri: true, /// Disable reporting errors to default domain.
+//                kTSKEnforcePinning: true,
+//                kTSKIncludeSubdomains: true,
+//                //                    kTSKExpirationDate: "2020-12-20",
+//                kTSKPublicKeyHashes: [
+//                    "azE5Ew0LGsMgkYqiDpYay0olLAS8cxxNGUZ8OJU756p=",
+//                    "azE5Ew0LGsMgkYqiDpYay0olLAS8cxxNGUZ8OJU756k=",
+//                ],
+//            ]
+//        ]
+//    ] as [String : Any]
     
     
     // MARK: TrustKit Pinning Reference
@@ -83,6 +83,29 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
     
     
     override init() {
+        
+        var trustKitConfig: [String: Any] = [:]
+        
+        if let url = Bundle.main.url(forResource: CONFIG_FILE, withExtension: "plist") {
+            
+            if let data = try? Data(contentsOf: url) {
+                let decoder = PropertyListDecoder()
+                let settings = try? decoder.decode(Settings.self, from: data)
+                
+                settings?.sslPinning?.forEach { item in
+                    
+                    trustKitConfig[kTSKPinnedDomains] = [
+                        item.domain: [
+                            kTSKDisableDefaultReportUri: true, /// Disable reporting errors to default domain.
+                            kTSKEnforcePinning: true,
+                            kTSKIncludeSubdomains: true,
+                            kTSKPublicKeyHashes: item.publicKeyHashes ?? [],
+                        ]
+                    ]
+                }
+            }
+        }
+        
         TrustKit.initSharedInstance(withConfiguration: trustKitConfig)
         super.init()
         
