@@ -38,22 +38,6 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
                    delegateQueue: OperationQueue.main)
     }()
     
-//    // TODO: remove domain and public key hardcoded
-//    private let trustKitConfig = [
-//        kTSKPinnedDomains: [
-//            "api.github.com": [
-//                kTSKDisableDefaultReportUri: true, /// Disable reporting errors to default domain.
-//                kTSKEnforcePinning: true,
-//                kTSKIncludeSubdomains: true,
-//                //                    kTSKExpirationDate: "2020-12-20",
-//                kTSKPublicKeyHashes: [
-//                    "azE5Ew0LGsMgkYqiDpYay0olLAS8cxxNGUZ8OJU756p=",
-//                    "azE5Ew0LGsMgkYqiDpYay0olLAS8cxxNGUZ8OJU756k=",
-//                ],
-//            ]
-//        ]
-//    ] as [String : Any]
-    
     
     // MARK: TrustKit Pinning Reference
     
@@ -70,9 +54,7 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
     }
     
     //    private var baseUrl: String
-    
-    //    open class var shared: NetworkClient { get }
-    
+        
     public static let shared = NetworkClient()
     
     private let logger = Logger.shared
