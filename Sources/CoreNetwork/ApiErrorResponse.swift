@@ -9,4 +9,8 @@ import Foundation
 
 public struct ApiErrorResponse: Codable {
     public let message: String
+    
+    enum CodingKeys: String, CodingKey {
+        case message = "mensagem"
+    }
 }

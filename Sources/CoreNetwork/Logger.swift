@@ -13,13 +13,19 @@ class Logger {
     
     var logLevel: Level = .NONE
     
+    func time() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ssZ"
+        return formatter.string(from: Date())
+    }
+    
     func log(request: URLRequest) {
         
         guard logLevel != .NONE else {
             return
         }
         
-        debug("\n\(request.httpMethod ?? "") \(request.url?.absoluteString ?? "")")
+        debug("\n\n🟦 \(time()) --> \(request.httpMethod ?? "") \(request.url?.absoluteString ?? "")")
         
         if(logLevel != .BASIC) {
             debug("Request Headers\n\(request.allHTTPHeaderFields?.toJSON() ?? "")")
@@ -39,14 +45,14 @@ class Logger {
         let statusCode = response?.statusCode ?? 0
         
         let icon = (HttpStatusCode.OK.rawValue ... 299).contains(statusCode) ? "🟩" : "🟥"
-        debug("\(icon) \(statusCode) --> \(request.httpMethod ?? "") \(request.url?.absoluteString ?? "")")
+        debug("\n\n\(icon) \(time()) --> \(statusCode) \(request.httpMethod ?? "") \(request.url?.absoluteString ?? "")")
         
         if(logLevel != .BASIC) {
             debug("Response Headers\n\(response?.allHeaderFields.toJSON() ?? "")")
         }
         
         if(logLevel == .BODY) {
-            debug("Response Body\n\(data.toDictionary()?.toJSON() ?? "")")
+            debug("Response Body\n\(data.toDictionary()?.toJSON() ?? "")\n")
         }
     }
     

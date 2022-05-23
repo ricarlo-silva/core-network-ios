@@ -215,6 +215,49 @@ class NetworkTests: XCTestCase {
         }
     }
     
+    func testPutVoid() async throws {
+        
+        let request = Request(
+            path: "https://05cf207c-4c73-4096-8de1-8d880bb934e7.mock.pstmn.io/news",
+            httpMethod: .PUT,
+            queries: [
+                "page": 1,
+                "": "closed",
+                "q": nil
+            ],
+            headers: [
+                "accept": "application/vnd.github.v3+json",
+                "": "test",
+                "q": nil
+            ],
+            httpBody: RepoRequest(
+                visibility: "public"
+            ).dict
+        )
+        
+//        Task {
+            
+        
+//        launch(block: { [self] in
+//            await apiClient.call(request: request, type: Void.self)
+//        }, completion: { [weak self] result in
+//            guard let self = self else { return }
+
+        
+        let result = await apiClient.call(request: request, type: Void.self)
+        
+        print("Thread Test ---> \(Thread.current)")
+
+        switch result {
+        case .success:
+            XCTAssertTrue(true)
+
+        case .failure(let error):
+            XCTFail(error.localizedDescription)
+        }
+//        }
+    }
+    
     //    func testDecodingError() async throws {
     //
     //        let request = Request<RepositoryResponse>(
@@ -318,7 +361,7 @@ class TokenInterceptor : InterceptorProtocol {
     }
 }
 
-class AuthenticatorInterceptor : InterceptorProtocol {
+class AuthenticatorInterceptor : AuthenticatorInterceptorProtocol {
     
     private let sessionLocal: SessionLocalProtocol
     
@@ -326,14 +369,16 @@ class AuthenticatorInterceptor : InterceptorProtocol {
         self.sessionLocal = sessionLocal
     }
     
-    func intercept(request: URLRequest) async -> Result<URLRequest, Error> {
-        
+//    func intercept(request: URLRequest) async -> Result<URLRequest, Error> {
+    func intercept(request: URLRequest, completion: @escaping (Result<URLRequest, Error>) -> Void) {
+        print("Thread Authenticator --> \(Thread.current)")
+
         // TODO: refresh token
         
         sessionLocal.saveToken(token: "123")
 //        var _request = request
 //        _request.setValue("456", forHTTPHeaderField: "token")
-        return .success(request)
+        return completion(.success(request))
     }
 }
 

@@ -20,8 +20,8 @@ private let TIMEOUT_INTERVAL_FOR_RESOURCE: String = "TIMEOUT_INTERVAL_FOR_RESOUR
 
 public protocol NetworkClientProtocol {
     
-    func setup(authenticator: InterceptorProtocol?, interceptors: [InterceptorProtocol])
-    func call<T: Codable>(request: Request, type: T.Type) async -> Result<T, Error>
+    func setup(authenticator: AuthenticatorInterceptorProtocol?, interceptors: [InterceptorProtocol])
+    func call<T>(request: Request, type: T.Type) async -> Result<T, Error>
     
 }
 
@@ -35,7 +35,7 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
     private lazy var urlSession: URLSession = {
         URLSession(configuration: config,
                    delegate: self,
-                   delegateQueue: OperationQueue.main)
+                   delegateQueue: nil)//OperationQueue.main)
     }()
     
     
@@ -59,7 +59,7 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
     
     private let logger = Logger.shared
     
-    private var authenticator: InterceptorProtocol? = nil
+    private var authenticator: AuthenticatorInterceptorProtocol? = nil
     
     private var interceptors: [InterceptorProtocol] = []
     
@@ -114,14 +114,14 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
     }
     
     public func setup(
-        authenticator: InterceptorProtocol? = nil,
+        authenticator: AuthenticatorInterceptorProtocol? = nil,
         interceptors: [InterceptorProtocol] = []
     ) {
         self.authenticator = authenticator
         self.interceptors = interceptors
     }
     
-    public func call<T: Codable>(
+    public func call<T>(
         request: Request,
         type: T.Type
     ) async -> Result<T, Error> {
@@ -175,28 +175,67 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
             
             logger.log(request: _request)
             
-            let (data, response) = try await urlSession.data(for: _request)
+            // TODO: iOS version 15 required :(
+            // let (data, response) = try await urlSession.data(for: _request)
             
-            let httpStatus = response as? HTTPURLResponse
-            let statusCode = httpStatus?.statusCode ?? 0
-            
-            logger.log(request: _request, data: data, response: httpStatus)
-            
-            switch statusCode {
-            case HttpStatusCode.OK.rawValue ... 299:
-                let mappedResponse = try JSONDecoder().decode(T.self, from: data)
-                return .success(mappedResponse)
-            case HttpStatusCode.UNAUTHORIZED.rawValue, HttpStatusCode.FORBIRDDEN.rawValue:
-                let result = await authenticator?.intercept(request: _request)
-                switch result {
-                case .success:
-                    return await call(request: request, type: type)
-                default:
-                    return .failure(HttpException.Unauthorized)
-                }
-            default:
-                let mappedResponse = try JSONDecoder().decode(ApiErrorResponse.self, from: data)
-                return .failure(HttpException.ApiError(mappedResponse))
+            return await withCheckedContinuation { continuation in
+                urlSession.dataTask(with: _request) { [self] (data, response, _) in
+                    print("Thread urlSession --> \(Thread.current)")
+                    guard let data = data else {
+                        continuation.resume(returning: .failure(HttpException.BadURL))
+                        return
+                    }
+
+                    let httpStatus = response as? HTTPURLResponse
+                    let statusCode = httpStatus?.statusCode ?? 0
+
+                    self.logger.log(request: _request, data: data, response: httpStatus)
+
+                    do {
+                        switch statusCode {
+                        case HttpStatusCode.OK.rawValue ... 299:
+                            
+                            switch type {
+                            case is Decodable.Type:
+                                let mappedResponse = try decode(model: T.self, data: data)
+                                continuation.resume(returning: .success(mappedResponse!))
+                                
+                            case is Void.Type:
+                                continuation.resume(returning: .success(() as! T))
+
+                            default:
+                                // TODO: change error type
+                                continuation.resume(returning: .failure(DecodingError.self as! Error))
+                            }
+                            
+                        case HttpStatusCode.UNAUTHORIZED.rawValue, HttpStatusCode.FORBIRDDEN.rawValue:
+                            
+                            // let result = await authenticator?.intercept(request: _request)
+                            
+                            guard let authenticator = self.authenticator else {
+                                continuation.resume(returning: .failure(HttpException.Unauthorized))
+                                return
+                            }
+                            authenticator.intercept(request: _request) { result in
+                                switch result {
+                                case .success:
+                                    Task {
+                                        let result = await self.call(request: request, type: type)
+                                        continuation.resume(returning: result)
+                                    }
+                                default:
+                                    continuation.resume(returning: .failure(HttpException.Unauthorized))
+                                }
+                            }
+                        default:
+                            let mappedResponse = try JSONDecoder().decode(ApiErrorResponse.self, from: data)
+                            continuation.resume(returning: .failure(HttpException.ApiError(mappedResponse)))
+                        }
+                    } catch {
+                        continuation.resume(returning: .failure(error))
+                    }
+
+                }.resume()
             }
         } catch {
             return .failure(error)
