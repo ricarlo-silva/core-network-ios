@@ -11,22 +11,22 @@ import XCTest
 class LogLevelTests: XCTestCase {
     
     func testExample1() async throws {
-        XCTAssertEqual(Level.valueOf("none"), .NONE)
+        XCTAssertEqual(LogLevel.valueOf("none"), .NONE)
     }
     
     func testExample2() async throws {
-        XCTAssertEqual(Level.valueOf("basic"), .BASIC)
+        XCTAssertEqual(LogLevel.valueOf("basic"), .BASIC)
     }
     
     func testExample3() async throws {
-        XCTAssertEqual(Level.valueOf("headers"), .HEADERS)
+        XCTAssertEqual(LogLevel.valueOf("headers"), .HEADERS)
     }
     
     func testExample4() async throws {
-        XCTAssertEqual(Level.valueOf("body"), .BODY)
+        XCTAssertEqual(LogLevel.valueOf("body"), .BODY)
     }
     
     func testExample5() async throws {
-        XCTAssertEqual(Level.valueOf(nil), .NONE)
+        XCTAssertEqual(LogLevel.valueOf(nil), .NONE)
     }
 }

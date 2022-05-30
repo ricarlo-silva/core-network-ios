@@ -12,12 +12,6 @@ private let Content_Type_Form_Urlencoded = "application/x-www-form-urlencoded"
 private let Content_Type_Key = "Content-Type"
 
 
-private let CONFIG_FILE: String = "CoreNetwork"
-private let LOG_LEVEL_KEY: String = "LOG_LEVEL"
-private let BASE_URL_KEY: String = "BASE_URL"
-private let TIMEOUT_INTERVAL_FOR_REQUEST: String = "TIMEOUT_INTERVAL_FOR_REQUEST"
-private let TIMEOUT_INTERVAL_FOR_RESOURCE: String = "TIMEOUT_INTERVAL_FOR_RESOURCE"
-
 public protocol NetworkClientProtocol {
     
     func setup(authenticator: AuthenticatorInterceptorProtocol?, interceptors: [InterceptorProtocol])
@@ -41,10 +35,15 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
     
     // MARK: TrustKit Pinning Reference
     
-    public func urlSession(_ session: URLSession,
-                           didReceive challenge: URLAuthenticationChallenge,
-                           completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?
-                           ) -> Void) {
+    public func urlSession(
+        _ session: URLSession,
+        didReceive challenge: URLAuthenticationChallenge,
+        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+    ) {
+        
+        guard settings.pinningEnabled else {
+            return completionHandler(.performDefaultHandling, nil)
+        }
         
         if TrustKit.sharedInstance().pinningValidator.handle(challenge, completionHandler: completionHandler) == false {
             // TrustKit did not handle this challenge: perhaps it was not for server trust
@@ -53,64 +52,45 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
         }
     }
     
-    //    private var baseUrl: String
-        
-    public static let shared = NetworkClient()
-    
-    private let logger = Logger.shared
+    private let logger: LoggerProtocol
     
     private var authenticator: AuthenticatorInterceptorProtocol? = nil
     
     private var interceptors: [InterceptorProtocol] = []
     
+    private let settings: NetworkClientSettings
     
-    override init() {
+    init(settings: NetworkClientSettings) {
+        self.settings = settings
         
         var trustKitConfig: [String: Any] = [:]
         
-        if let url = Bundle.main.url(forResource: CONFIG_FILE, withExtension: "plist") {
-            
-            if let data = try? Data(contentsOf: url) {
-                let decoder = PropertyListDecoder()
-                let settings = try? decoder.decode(Settings.self, from: data)
-                
-                settings?.sslPinning?.forEach { item in
-                    
-                    trustKitConfig[kTSKPinnedDomains] = [
-                        item.domain: [
-                            kTSKDisableDefaultReportUri: true, /// Disable reporting errors to default domain.
-                            kTSKEnforcePinning: true,
-                            kTSKIncludeSubdomains: true,
-                            kTSKPublicKeyHashes: item.publicKeyHashes ?? [],
-                        ]
+        if settings.pinningEnabled {
+            settings.sslPinning?.forEach { item in
+                trustKitConfig[kTSKPinnedDomains] = [
+                    item.domain: [
+                        kTSKDisableDefaultReportUri: true, /// Disable reporting errors to default domain.
+                        kTSKEnforcePinning: true,
+                        kTSKIncludeSubdomains: true,
+                        kTSKPublicKeyHashes: item.publicKeyHashes ?? [],
                     ]
-                }
+                ]
             }
         }
+        
+        self.logger = Logger(logLevel: settings.logLevel)
         
         TrustKit.initSharedInstance(withConfiguration: trustKitConfig)
         super.init()
         
-        if let filePath = Bundle.main.path(forResource: CONFIG_FILE, ofType: "plist") {
-            
-            let plist = NSDictionary(contentsOfFile: filePath)
-            
-            if let logLevel = plist?.object(forKey: LOG_LEVEL_KEY) as? String {
-                self.logger.logLevel = Level.valueOf(logLevel)
-            }
-            
-            //            if let baseUrl = plist?.object(forKey: BASE_URL_KEY) as? String {
-            //                self.baseUrl = baseUrl
-            //            }
-            
-            if let interval = plist?.object(forKey: TIMEOUT_INTERVAL_FOR_REQUEST) as? Double {
-                config.timeoutIntervalForRequest = interval
-            }
-            
-            if let interval = plist?.object(forKey: TIMEOUT_INTERVAL_FOR_RESOURCE) as? Double {
-                config.timeoutIntervalForResource = interval
-            }
+        if let timeout = settings.timeoutIntervalForRequest {
+            config.timeoutIntervalForRequest = timeout
         }
+        
+        if let timeout = settings.timeoutIntervalForResource {
+            config.timeoutIntervalForResource = timeout
+        }
+        
     }
     
     public func setup(
@@ -127,8 +107,8 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
     ) async -> Result<T, Error> {
         
         do {
-            
-            guard var urlComponents = URLComponents(string: request.path) else {
+            let path = try makeURL(path: request.path)
+            guard var urlComponents = URLComponents(string: path) else {
                 return .failure(HttpException.BadURL)
             }
             
@@ -229,7 +209,7 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
                             }
                         default:
                             let mappedResponse = try JSONDecoder().decode(ApiErrorResponse.self, from: data)
-                            continuation.resume(returning: .failure(HttpException.ApiError(mappedResponse)))
+                            continuation.resume(returning: .failure(HttpException.ApiError(mappedResponse, statusCode)))
                         }
                     } catch {
                         continuation.resume(returning: .failure(error))
@@ -241,4 +221,21 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
             return .failure(error)
         }
     }
+    
+    private func makeURL(path: String) throws -> String {
+        let baseUrl = settings.baseUrl
+        if (path.hasPrefix("http")) {
+            return path
+        }
+        else if (!path.hasPrefix("http") && !baseUrl.isEmpty) {
+            if baseUrl.hasSuffix("/") || path.hasPrefix("/") {
+                return "\(baseUrl)\(path)"
+            }
+            return "\(baseUrl)/\(path)"
+        }
+        else {
+            throw HttpException.BadURL
+        }
+    }
+
 }

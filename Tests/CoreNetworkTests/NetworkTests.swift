@@ -11,11 +11,20 @@ import XCTest
 class NetworkTests: XCTestCase {
     
     private lazy var apiClient: NetworkClientProtocol = {
-        return NetworkClient.shared
+        return NetworkClient(settings: NetworkClientSettings(
+            baseUrl: "https://api.github.com/repos/ricarlo-silva"
+        ))
+    }()
+    
+    private lazy var apiClient2: NetworkClientProtocol = {
+        return NetworkClient(settings: NetworkClientSettings(
+            baseUrl: "https://05cf207c-4c73-4096-8de1-8d880bb934e7.mock.pstmn.io",
+            logLevel: .BODY
+        ))
     }()
     
     override func setUp() {
-        apiClient.setup(
+        apiClient2.setup(
             authenticator: AuthenticatorInterceptor(sessionLocal: SessionLocal()),
             interceptors: [
                 DefaultInterceptor(),
@@ -35,7 +44,7 @@ class NetworkTests: XCTestCase {
     func testGet() async throws {
         
         let request = Request(
-            path: "https://api.github.com/repos/ricarlo-silva/sample-app-ios",
+            path: "/sample-app-ios",
             httpMethod: .GET,
 //            queries: [
 //                "page": 1,
@@ -47,7 +56,6 @@ class NetworkTests: XCTestCase {
                 "": "test",
                 "q": nil
             ]
-            //            httpBody: User(name: "", email: "")
         )
         
         let result = await apiClient.call(request: request, type: RepositoryResponse.self)
@@ -64,7 +72,7 @@ class NetworkTests: XCTestCase {
     func testPost() async throws {
         
         let request = Request(
-            path: "https://05cf207c-4c73-4096-8de1-8d880bb934e7.mock.pstmn.io/news",
+            path: "news",
             httpMethod: .POST,
             queries: [
                 "page": 1,
@@ -81,7 +89,7 @@ class NetworkTests: XCTestCase {
             ).dict
         )
         
-        let result = await apiClient.call(request: request, type: RepositoryResponse.self)
+        let result = await apiClient2.call(request: request, type: RepositoryResponse.self)
         
         switch result {
         case .success(let repo):
@@ -112,7 +120,7 @@ class NetworkTests: XCTestCase {
             ).dict
         )
         
-        let result = await apiClient.call(request: request, type: RepositoryResponse.self)
+        let result = await apiClient2.call(request: request, type: RepositoryResponse.self)
         
         switch result {
         case .success(let repo):
@@ -143,7 +151,7 @@ class NetworkTests: XCTestCase {
             ).dict
         )
         
-        let result = await apiClient.call(request: request, type: RepositoryResponse.self)
+        let result = await apiClient2.call(request: request, type: RepositoryResponse.self)
         
         switch result {
         case .success(let repo):
@@ -152,8 +160,9 @@ class NetworkTests: XCTestCase {
             switch error {
             case HttpException.Unauthorized:
                 XCTFail(error.localizedDescription)
-            case HttpException.ApiError(let error):
+            case HttpException.ApiError(let error, let statusCode):
                 XCTAssertEqual(error.message, "not found")
+                XCTAssertEqual(statusCode, HttpStatusCode.NOT_FOUND.rawValue)
             default:
                 XCTFail(error.localizedDescription)
             }
@@ -180,7 +189,7 @@ class NetworkTests: XCTestCase {
             ).dict
         )
         
-        let result = await apiClient.call(request: request, type: RepositoryResponse.self)
+        let result = await apiClient2.call(request: request, type: RepositoryResponse.self)
         
         switch result {
         case .success(let repo):
@@ -198,7 +207,7 @@ class NetworkTests: XCTestCase {
             httpMethod: .GET
         )
         
-        let result = await apiClient.call(request: request, type: OwnerResponse.self)
+        let result = await apiClient2.call(request: request, type: OwnerResponse.self)
         
         switch result {
         case .success(let repo):
@@ -207,7 +216,7 @@ class NetworkTests: XCTestCase {
             switch error {
             case HttpException.Unauthorized:
                 XCTFail(error.localizedDescription)
-            case HttpException.ApiError(let error):
+            case HttpException.ApiError(let error, _):
                 XCTAssertEqual(error.message, "not found")
             default:
                 XCTFail(error.localizedDescription)
@@ -239,12 +248,12 @@ class NetworkTests: XCTestCase {
             
         
 //        launch(block: { [self] in
-//            await apiClient.call(request: request, type: Void.self)
+//            await apiClient2.call(request: request, type: Void.self)
 //        }, completion: { [weak self] result in
 //            guard let self = self else { return }
 
         
-        let result = await apiClient.call(request: request, type: Void.self)
+        let result = await apiClient2.call(request: request, type: Void.self)
         
         print("Thread Test ---> \(Thread.current)")
 
@@ -266,7 +275,7 @@ class NetworkTests: XCTestCase {
     ////            httpBody: ""
     //        )
     //
-    //        let result = await apiClient.call(request: request, type: String.self)
+    //        let result = await apiClient2.call(request: request, type: String.self)
     //
     //        switch result {
     //        case .success:

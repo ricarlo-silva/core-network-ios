@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum Level: String, CaseIterable {
+public enum LogLevel: String, CaseIterable, Codable {
     
   /** No logs. */
   case NONE = "NONE"
@@ -74,12 +74,12 @@ public enum Level: String, CaseIterable {
      }
 }
 
-extension Level {
+extension LogLevel {
     
-    static func valueOf(_ value: String?) -> Level {
+    static func valueOf(_ value: String?) -> LogLevel {
         guard let value = value else {
             return .NONE
         }
-        return Level.allCases.first { $0.value == value.uppercased() } ?? .NONE
+        return LogLevel.allCases.first { $0.value == value.uppercased() } ?? .NONE
     }
 }

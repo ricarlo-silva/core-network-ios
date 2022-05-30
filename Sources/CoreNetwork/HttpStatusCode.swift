@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum HttpStatusCode: Int {
+public enum HttpStatusCode: Int {
     case OK = 200
     case BAD_REQUEST = 400
     case UNAUTHORIZED = 401

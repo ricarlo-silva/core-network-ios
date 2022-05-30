@@ -7,11 +7,19 @@
 
 import Foundation
 
-class Logger {
+public protocol LoggerProtocol {
     
-    public static let shared = Logger()
+    func log(request: URLRequest)
+    func log(request: URLRequest, data: Data, response: HTTPURLResponse?)
+}
+
+class Logger: LoggerProtocol {
     
-    var logLevel: Level = .NONE
+    let logLevel: LogLevel
+    
+    init(logLevel: LogLevel = .NONE) {
+        self.logLevel = logLevel
+    }
     
     func time() -> String {
         let formatter = DateFormatter()

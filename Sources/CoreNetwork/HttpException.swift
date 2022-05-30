@@ -9,6 +9,6 @@ import Foundation
 
 public enum HttpException: Error {
     case BadURL
-    case ApiError(_ error: ApiErrorResponse)
+    case ApiError(_ error: ApiErrorResponse,_ statusCode: Int)
     case Unauthorized
 }
