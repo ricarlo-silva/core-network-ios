@@ -14,7 +14,7 @@ public struct NetworkClientSettings: Codable {
     let pinningEnabled: Bool
     let sslPinning: Array<SslPinningSettings>?
     
-    init(
+    public init(
         baseUrl: String = "",
         timeoutIntervalForRequest: Double? = nil,
         timeoutIntervalForResource: Double? = nil,
