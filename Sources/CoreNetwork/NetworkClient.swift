@@ -60,7 +60,7 @@ public class NetworkClient : NSObject, NetworkClientProtocol, URLSessionDelegate
     
     private let settings: NetworkClientSettings
     
-    init(settings: NetworkClientSettings) {
+    public init(settings: NetworkClientSettings) {
         self.settings = settings
         
         var trustKitConfig: [String: Any] = [:]
